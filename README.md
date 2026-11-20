@@ -8,7 +8,7 @@ Created By Mark Stronks, Stronkie Soft © 2026
 
 Written in 68000 assembly for a stock Amiga 500 with Kickstart / Workbench 1.3 and a 512K trapdoor expansion (1 MB). Runs from a bootable disk (or a Gotek), from hard drive / CF card and with WHDLoad. Play it with a **joystick** in port 2 (or the keyboard).
 
-**Latest version: V0.1 - TEST VERSION.**
+**Latest version: V0.1 - TEST VERSION.** On itch.io: https://stronkie.itch.io/rc-turbo-cup
 
 ## Features
 
