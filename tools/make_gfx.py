@@ -85,24 +85,26 @@ import tracks as T
 import sprites as SP
 
 # colours 16..31: 16 black, 20 white, 24 red, 28 yellow; the sprite pairs get the car colours per race
-PAINTS = [  # player paints (dark, body, light): unlocked by the vehicle class
-    (0x600, 0xd22, 0xf99), (0x444, 0xaab, 0xeef), (0x420, 0xd90, 0xff7), (0x204, 0x84d, 0xdaf), (0x022, 0x0bb, 0x9ff), (0x111, 0x444, 0xfd2)]
-PAINT_NAMES = ['RACING RED', 'SILVER', 'GOLD', 'PURPLE', 'TURQUOISE', 'BLACK GOLD']
-PERS = [  # AI drivers: name, colours, top speed, caution, aggression, error
-    ('SPEEDY SAM', (0x013, 0x37e, 0x9cf)),
-    ('CAREFUL CARLA', (0x031, 0x3b3, 0xaea)),
-    ('MAD MAX', (0x200, 0x777, 0xccc)),
-    ('ENGINEER ERIK', (0x520, 0xe70, 0xfc6)),
+PAINTS = [  # your paint (dark, body): unlocked by the vehicle class
+    (0x700, 0xe22), (0x445, 0xaab), (0x640, 0xeb2), (0x315, 0x94e), (0x044, 0x1cc), (0x222, 0x555)]
+PAINT_NAMES = ['RACING RED', 'SILVER', 'GOLD', 'PURPLE', 'TURQUOISE', 'STEALTH BLACK']
+PERS = [  # computer drivers: name, (dark, body)
+    ('SPEEDY SAM', (0x025, 0x36e)),
+    ('CAREFUL CARLA', (0x041, 0x3b3)),
+    ('MAD MAX', (0x333, 0x888)),
+    ('ENGINEER ERIK', (0x730, 0xf90)),
 ]
 HUDPAL = [0x112, 0x223, 0x445, 0x667, 0xaab, 0x556, 0x4c4, 0xf80, 0x800, 0x48f, 0x8cf, 0x99a, 0x334, 0x0a0, 0xddd, 0x6df]
 (H_BG, H_PAN, H_PANL, H_PANLL, H_TXT, H_DIM, H_GREEN, H_ORANGE, H_DRED, H_BLUE, H_LBLUE, H_MAP, H_LDIM, H_DGREEN, H_WHITE, H_CYAN) = range(16)
 
 def shared_pal():
+    """16..31: 16 black, 17 outline, 20 white, 21 glass, 24 red, 25 grey, 28 yellow, 29 light glass,
+    18/19, 22/23, 26/27, 30/31: the four cars (dark, body)"""
     p = [0] * 32
-    p[16] = 0x000; p[20] = 0xfff; p[24] = 0xd22; p[28] = 0xfd2
-    for k, c in enumerate(PAINTS[0]): p[17 + k] = c
+    p[16] = 0x000; p[17] = 0x111; p[20] = 0xfff; p[21] = 0x235; p[24] = 0xd22; p[25] = 0x889; p[28] = 0xfd2; p[29] = 0x9cf
+    p[18], p[19] = PAINTS[0]
     for s in range(3):
-        for k, c in enumerate(PERS[s][1]): p[21 + s * 4 + k] = c
+        p[22 + s * 4], p[23 + s * 4] = PERS[s][1]
     return p
 
 # ------------------------------------------------------------------ tracks
@@ -194,21 +196,34 @@ def tracks_asm(meta):
 # ------------------------------------------------------------------ car sprites
 def car_sprites():
     out = bytearray()
-    prev = Image.new('P', (16 * 17, 10 * 17), 0)
+    pal = {0: (70, 90, 70), 1: (17, 17, 17), 2: (102, 0, 0), 3: (221, 34, 34), 4: (255, 255, 255), 5: (34, 51, 85),
+           8: (220, 30, 30), 9: (136, 136, 153), 12: (255, 210, 30), 13: (150, 200, 255)}
+    prev = Image.new('RGB', (16 * 17, 10 * 17), pal[0])
     for dsn in range(5):
         for cage in (0, 1):
             for k in range(16):
-                a = SP.render_car(dsn, k, cage)
-                assert a.shape == (SP.CAR_H, 16)
-                out += SP.sprite_bytes(a)
-                prev.paste(Image.fromarray(a), (k * 17, (dsn * 2 + cage) * 17))
+                a = SP.render_car15(dsn, k, cage)
+                out += SP.car15_bytes(a)
+                im = Image.new('RGB', (16, 16)); im.putdata([pal.get(int(v), (255, 0, 255)) for v in a.flatten()])
+                prev.paste(im, (k * 17, (dsn * 2 + cage) * 17))
     return bytes(out), prev
 
-def weapon_sprites():
+def weapon_bobs():
+    """missiles, bombs, explosions: 16x16 bobs in playfield colours; per row: mask, 5 plane words"""
+    frames = [(SP.missile(k), {1: 16, 2: 20, 3: 28}) for k in range(8)]
+    frames += [(SP.bomb(f), {1: 16, 2: 20, 3: 28}) for f in range(2)]
+    frames += [(SP.explosion(f), {1: 16, 2: 24, 3: 28}) for f in range(4)]
     out = bytearray()
-    for k in range(8): out += SP.sprite_bytes(SP.missile(k))
-    for f in range(2): out += SP.sprite_bytes(SP.bomb(f))
-    for f in range(4): out += SP.sprite_bytes(SP.explosion(f))
+    for a, m in frames:
+        for row in a:
+            mw = 0; pw = [0] * 5
+            for i, v in enumerate(row[:16]):
+                if v:
+                    mw |= 0x8000 >> i
+                    c = m[int(v)]
+                    for p in range(5):
+                        if c >> p & 1: pw[p] |= 0x8000 >> i
+            out += mw.to_bytes(2, 'big') + b''.join(w.to_bytes(2, 'big') for w in pw)
     return bytes(out)
 
 # ------------------------------------------------------------------ pickup icons (16x16, playfield colours)
@@ -334,8 +349,9 @@ def logo_text(im, y, size=44):
     im.paste(grad, (0, 0), mask)
 
 def big_car(im, x, y, design, k, colours, scale=4):
-    a = SP.render_car(design, k, big=scale)
-    cols = {1: colours[0], 2: colours[1], 3: colours[2]}
+    a = SP.render_car15(design, k, ss=6, scale=SP.CAR_SCALE * scale, size=16 * scale, anchor=(8 * scale, 10 * scale))
+    cols = {1: (17, 17, 17), 2: colours[0], 3: colours[1], 4: (255, 255, 255), 5: (34, 51, 85), 8: (220, 30, 30),
+            9: (136, 136, 153), 12: (255, 210, 30), 13: (150, 200, 255)}
     rgbim = Image.new('RGBA', (a.shape[1], a.shape[0]), (0, 0, 0, 0)); px = rgbim.load()
     for yy in range(a.shape[0]):
         for xx in range(a.shape[1]):
@@ -570,7 +586,7 @@ def main():
     open(os.path.join(OUT, 'tracks.i'), 'w').write(tracks_asm(meta))
     cars, cprev = car_sprites()
     open(os.path.join(OUT, 'cars.bin'), 'wb').write(cars)
-    open(os.path.join(OUT, 'wspr.bin'), 'wb').write(weapon_sprites())
+    open(os.path.join(OUT, 'wbob.bin'), 'wb').write(weapon_bobs())
     ic, im_, iprev = icons_data()
     open(os.path.join(OUT, 'icons.bin'), 'wb').write(ic); open(os.path.join(OUT, 'iconmask.bin'), 'wb').write(im_)
     sp = shared_pal()
@@ -591,9 +607,9 @@ def main():
     L.append('title_pal:\tdc.w\t' + ','.join('$%03x' % c for c in tpal))
     L.append('menu_pal:\tdc.w\t' + ','.join('$%03x' % c for c in mpal))
     L.append('paint_pal:')
-    for p in PAINTS: L.append('\tdc.w\t$%03x,$%03x,$%03x' % p)
+    for p in PAINTS: L.append('\tdc.w\t$%03x,$%03x' % p)
     L.append('pers_pal:')
-    for n, p in PERS: L.append('\tdc.w\t$%03x,$%03x,$%03x' % p)
+    for n, p in PERS: L.append('\tdc.w\t$%03x,$%03x' % p)
     L.append('paint_names:')
     for n in PAINT_NAMES: L.append('\tdc.b\t\'%s\',0' % n)
     L.append('pers_names:')
@@ -602,7 +618,7 @@ def main():
     for k in range(5): L.append('\tdc.b\t\'%s\',0' % SP.DESIGNS[k]['name'])
     L.append('\teven')
     L.append(tables())
-    eq = dict(CAR_H=SP.CAR_H, CARSPR=SP.CAR_H * 4, NTRACKS=len(T.TRACKS), WW=T.WW, WH=T.WH, SURF_W=T.SW, SURF_H=T.SH,
+    eq = dict(CAR_H=SP.CAR_H, CARSPR=SP.CAR_H * 8, CAR_AX=int(SP.ANCHOR[0]), CAR_AY=int(SP.ANCHOR[1]), NTRACKS=len(T.TRACKS), WW=T.WW, WH=T.WH, SURF_W=T.SW, SURF_H=T.SH,
               HUD_H=HUD_H, MM_X=MM_X, MM_Y=MM_Y, NICONS=len(ICONS), NSONGS=len(SONGS), ROAD_R=T.R)
     for i, n in enumerate(['WALL', 'ROAD', 'KERB', 'OIL', 'SAND', 'WATER', 'MARBLE', 'BUMP', 'ZIP', 'RAMP', 'GRASS', 'ZAP']):
         eq['SURF_' + n] = i
@@ -628,7 +644,7 @@ def main():
     L.append('inst_engine:\tdc.b\t%s' % ','.join(str(b if b < 128 else b - 256) for b in ew))
     L.append('snd_null:\tdc.w\t0,0')
     L.append('\tsection\tgfx,data')
-    L.append('cars_gfx:\tincbin\t"cars.bin"\nwspr_gfx:\tincbin\t"wspr.bin"')
+    L.append('cars_gfx:\tincbin\t"cars.bin"\nwbob_gfx:\tincbin\t"wbob.bin"')
     L.append('icons_gfx:\tincbin\t"icons.bin"\nicons_mask:\tincbin\t"iconmask.bin"')
     L.append('hud_lz:\tincbin\t"hud.lz"\n\teven\ntitle_lz:\tincbin\t"title.lz"\n\teven\nmenu_lz:\tincbin\t"menu.lz"\n\teven')
     L.append('font8:\tincbin\t"font8.bin"')
@@ -641,8 +657,7 @@ def main():
     w = wave.open(os.path.join(OUT, 'preview_sounds.wav'), 'wb'); w.setnchannels(1); w.setsampwidth(1); w.setframerate(RATE)
     for k in SND: w.writeframes(bytes((b + 128) & 255 for b in snd[k]) + bytes([128]) * 2000)
     w.close()
-    cprev.putpalette([0, 0, 0, 90, 20, 20, 220, 40, 40, 255, 170, 150] + [0] * 756)
-    cprev.convert('RGB').resize((cprev.width * 3, cprev.height * 3), Image.NEAREST).save(os.path.join(OUT, 'preview_cars.png'))
+    cprev.resize((cprev.width * 3, cprev.height * 3), Image.NEAREST).save(os.path.join(OUT, 'preview_cars.png'))
     print('cars %d, samples %d bytes, title %d, menu %d, hud %d' % (len(cars), sum(len(v) for v in snd.values()),
           os.path.getsize(os.path.join(OUT, 'title.lz')), os.path.getsize(os.path.join(OUT, 'menu.lz')), os.path.getsize(os.path.join(OUT, 'hud.lz'))))
 

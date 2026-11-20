@@ -388,25 +388,46 @@ class Amiga:
                 for p in range(nplanes):
                     bpl[p] += fetch * 2 + (mod1 if p % 2 == 0 else mod2)
                 if y == 0: pal0 = pal
-        # hardware sprites (one use per channel, 3 colours + transparent), in front
+        # hardware sprites (one use per channel, 3 colours + transparent, or attached pairs: 15 colours)
         if self.dmacon & 0x220 == 0x220:
             pal = pal0
-            for n in range(7, -1, -1):
+            def spr(n):
                 sp = ((regs[(0x120 >> 1) + n * 2] << 16) | regs[(0x120 >> 1) + n * 2 + 1]) & 0x7fffe
                 pos = self.rw(sp); ctl = self.rw(sp + 2)
                 vs = (pos >> 8) | ((ctl & 4) << 6); ve = (ctl >> 8) | ((ctl & 2) << 7)
                 hs = ((pos & 0xff) << 1) | (ctl & 1)
-                if ve <= vs: continue
-                a = sp + 4
-                for v in range(vs, ve):
-                    d0 = self.rw(a); d1 = self.rw(a + 2); a += 4
-                    yy = v - 0x2c
-                    if not 0 <= yy < 256: continue
-                    for i in range(16):
-                        c = ((d0 >> (15 - i)) & 1) | (((d1 >> (15 - i)) & 1) << 1)
-                        xx = hs - 0x81 + i
-                        if c and 0 <= xx < 320:
-                            px[xx, yy] = pal[16 + (n >> 1) * 4 + c]
+                return sp, vs, ve, hs, ctl
+            for n in (6, 4, 2, 0):
+                e = spr(n); o = spr(n + 1)
+                attached = bool(o[4] & 0x80) and o[1] == e[1] and o[3] == e[3]
+                for which in ((e, o) if attached else (o, e)):
+                    pass
+                if attached:
+                    sp, vs, ve, hs, _ = e; sp2 = o[0]
+                    if ve <= vs: continue
+                    for k, v in enumerate(range(vs, ve)):
+                        yy = v - 0x2c
+                        if not 0 <= yy < 256: continue
+                        a0 = self.rw(sp + 4 + k * 4); a1 = self.rw(sp + 6 + k * 4)
+                        b0 = self.rw(sp2 + 4 + k * 4); b1 = self.rw(sp2 + 6 + k * 4)
+                        for i in range(16):
+                            sh = 15 - i
+                            c = ((a0 >> sh) & 1) | (((a1 >> sh) & 1) << 1) | (((b0 >> sh) & 1) << 2) | (((b1 >> sh) & 1) << 3)
+                            xx = hs - 0x81 + i
+                            if c and 0 <= xx < 320: px[xx, yy] = pal[16 + c]
+                    continue
+                for (sp, vs, ve, hs, ctl), nn in ((o, n + 1), (e, n)):
+                    if ve <= vs: continue
+                    a = sp + 4
+                    for v in range(vs, ve):
+                        d0 = self.rw(a); d1 = self.rw(a + 2); a += 4
+                        yy = v - 0x2c
+                        if not 0 <= yy < 256: continue
+                        for i in range(16):
+                            c = ((d0 >> (15 - i)) & 1) | (((d1 >> (15 - i)) & 1) << 1)
+                            xx = hs - 0x81 + i
+                            if c and 0 <= xx < 320:
+                                px[xx, yy] = pal[16 + (nn >> 1) * 4 + c]
         return img
 
     # ------------------------------------------------------------- OS stubs

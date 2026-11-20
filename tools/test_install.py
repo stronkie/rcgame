@@ -116,7 +116,7 @@ def main():
     shutil.rmtree(T, ignore_errors=True)
     disk = os.path.join(T, 'disk'); os.makedirs(disk)
     for d in ('dh0', 'work', 'work/Games'): os.makedirs(os.path.join(T, d))
-    files = adf_files(os.path.join(B, 'RCTurboCup_V0.1.adf'))
+    files = adf_files(os.path.join(B, 'RCTurboCup_V' + os.environ.get('VER', '0.2') + '.adf'))
     print('on the disk:', sorted(files))
     for n, d in files.items(): open(os.path.join(disk, n), 'wb').write(d)
     os.makedirs(os.path.join(disk, 'Tracks'))

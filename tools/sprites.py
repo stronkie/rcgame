@@ -154,3 +154,156 @@ if __name__ == '__main__':
     bg = Image.new('RGB', sheet.size, (60, 60, 60)); m = Image.fromarray((np.array(sheet).sum(axis=2) > 0).astype(np.uint8) * 255)
     bg.paste(sheet, (0, 0), m)
     bg.resize((bg.width * 4, bg.height * 4), Image.NEAREST).save('build/prev/cars.png')
+
+# =====================================================================================
+#  V0.2: 15 colour cars (attached sprite pairs).  Pixel values 0..15 for car slot 0:
+#   1 outline/tyres  2 body dark  3 body  4 white  5 glass  8 red  9 grey  12 yellow  13 glass light
+#  (2 and 3 move to 6/7, 10/11, 14/15 for the other car slots: bits 2-3 = slot where bit 1 is set)
+# =====================================================================================
+OUT, DARK, BODY, WHITE, GLASS, RED, GREY, YEL, GLASSL = 1, 2, 3, 4, 5, 8, 9, 12, 13
+
+def _box(x0, x1, y0, y1, z0, z1, top, side, sidedark=None):
+    return ('box', x0, x1, y0, y1, z0, z1, top, side, sidedark if sidedark is not None else DARK)
+
+MODELS = {
+    0: [  # rookie buggy: big wheels, open seat
+        _box(-5.4, 5.4, -2.8, 2.8, 1.6, 3.2, BODY, BODY),
+        _box(-2.4, 0.8, -1.8, 1.8, 3.2, 4.0, OUT, OUT, OUT),
+        _box(-5.8, -3.6, -2.0, 2.0, 3.2, 4.2, GREY, GREY, DARK),
+        ('wheel', 3.9, 3.5, 2.1, 1.8), ('wheel', -3.9, 3.5, 2.3, 2.0)],
+    1: [  # sport: low coupe
+        _box(-6.4, 6.4, -3.1, 3.1, 1.0, 2.9, BODY, BODY),
+        _box(-3.0, 2.2, -2.6, 2.6, 2.9, 4.6, GLASSL, GLASS),
+        _box(-2.6, 1.6, -2.2, 2.2, 4.6, 4.9, BODY, BODY),
+        ('wheel', 4.0, 3.2, 1.7, 1.4), ('wheel', -4.0, 3.2, 1.7, 1.4),
+        ('light', 6.4, -2.2, 2.0, YEL), ('light', 6.4, 2.2, 2.0, YEL),
+        ('light', -6.4, -2.2, 2.2, RED), ('light', -6.4, 2.2, 2.2, RED)],
+    2: [  # turbo: wing and hood scoop
+        _box(-6.4, 6.4, -3.2, 3.2, 1.0, 2.9, BODY, BODY),
+        _box(-2.6, 2.0, -2.5, 2.5, 2.9, 4.5, GLASSL, GLASS),
+        _box(2.8, 4.8, -0.8, 0.8, 2.9, 3.6, OUT, DARK, OUT),
+        _box(-6.0, -5.4, -0.4, 0.4, 2.9, 4.6, OUT, OUT, OUT),
+        _box(-7.0, -5.4, -3.6, 3.6, 4.6, 5.3, DARK, DARK, OUT),
+        ('wheel', 4.0, 3.3, 1.7, 1.5), ('wheel', -4.0, 3.4, 1.9, 1.7),
+        ('light', 6.4, -2.2, 2.0, YEL), ('light', 6.4, 2.2, 2.0, YEL),
+        ('light', -6.4, -2.2, 2.2, RED), ('light', -6.4, 2.2, 2.2, RED)],
+    3: [  # super: wide, low, racing stripe
+        _box(-6.8, 6.8, -3.7, 3.7, 0.8, 2.6, BODY, BODY),
+        _box(-6.8, 6.8, -0.7, 0.7, 2.6, 2.75, WHITE, WHITE, GREY),
+        _box(-2.2, 2.6, -2.8, 2.8, 2.6, 4.0, GLASSL, GLASS),
+        _box(-7.2, -5.8, -3.8, 3.8, 3.4, 4.2, BODY, DARK),
+        ('wheel', 4.4, 3.6, 1.6, 1.5), ('wheel', -4.4, 3.6, 1.7, 1.6),
+        ('light', 6.8, -2.6, 1.8, YEL), ('light', 6.8, 2.6, 1.8, YEL),
+        ('light', -6.8, -2.6, 2.0, RED), ('light', -6.8, 2.6, 2.0, RED)],
+    4: [  # champion: open wheel racer
+        _box(-6.0, 7.2, -1.6, 1.6, 1.0, 2.9, BODY, BODY),
+        _box(-4.8, -0.6, -2.8, 2.8, 1.0, 2.5, BODY, BODY),
+        _box(6.2, 7.8, -3.9, 3.9, 0.8, 1.5, DARK, DARK, OUT),
+        _box(-7.6, -6.0, -3.9, 3.9, 3.6, 4.8, DARK, DARK, OUT),
+        _box(-2.0, 0.4, -1.1, 1.1, 2.9, 3.9, WHITE, WHITE, GREY),
+        ('wheel', 4.6, 3.4, 1.8, 1.8), ('wheel', -4.4, 3.4, 2.0, 2.1)],
+}
+PRIO = (RED, YEL, WHITE, GREY, GLASSL)
+
+def _faces(design, ang, cage):
+    faces = []
+    def rot(x, y): return x * math.cos(ang) - y * math.sin(ang), x * math.sin(ang) + y * math.cos(ang)
+    def add_box(x0, x1, y0, y1, z0, z1, top, side, sdark):
+        C = {}
+        for xi, xx in enumerate((x0, x1)):
+            for yi, yy in enumerate((y0, y1)):
+                rx, ry = rot(xx, yy)
+                for zi, zz in enumerate((z0, z1)): C[(xi, yi, zi)] = (rx, ry, zz)
+        def face(keys, c):
+            pts = [C[q] for q in keys]
+            depth = sum(p[0] + p[1] for p in pts) / 4 + sum(p[2] for p in pts) / 4 * 0.01
+            faces.append((depth, pts, c))
+        for keys, n in ((((0, 0, 0), (1, 0, 0), (1, 0, 1), (0, 0, 1)), (0, -1)), (((0, 1, 0), (1, 1, 0), (1, 1, 1), (0, 1, 1)), (0, 1)),
+                        (((0, 0, 0), (0, 1, 0), (0, 1, 1), (0, 0, 1)), (-1, 0)), (((1, 0, 0), (1, 1, 0), (1, 1, 1), (1, 0, 1)), (1, 0))):
+            nx, ny = rot(*n)
+            if nx + ny > -0.05:
+                face(keys, side if nx + ny > 0.6 else sdark)
+        face(((0, 0, 1), (1, 0, 1), (1, 1, 1), (0, 1, 1)), top)
+    for p in MODELS[design]:
+        if p[0] == 'box': add_box(*p[1:])
+        elif p[0] == 'wheel':
+            _, wx, wy, r, w = p
+            for s in (-1, 1):
+                add_box(wx - r, wx + r, s * wy - w / 2, s * wy + w / 2, 0, 2 * r * 0.95, OUT, OUT, OUT)
+                # the hub on the outside face
+                hy = s * (wy + w / 2 + 0.05)
+                rx, ry = rot(wx, hy)
+                faces.append((rx + ry + 0.5, [(rx, ry, r * 0.95)], GREY))
+        elif p[0] == 'light':
+            _, lx, ly, lz, c = p
+            rx, ry = rot(lx, ly)
+            faces.append((rx + ry + 1.0, [(rx, ry, lz)], c))
+    if cage:
+        for (xx, yy) in ((-3.2, -2.9), (-3.2, 2.9), (2.2, -2.9), (2.2, 2.9)):
+            faces.append((999, [rot(xx, yy) + (2.6,), rot(xx, yy) + (5.4,)], GREY))
+        for (a, b) in (((-3.2, -2.9), (-3.2, 2.9)), ((2.2, -2.9), (2.2, 2.9)), ((-3.2, -2.9), (2.2, -2.9)), ((-3.2, 2.9), (2.2, 2.9))):
+            faces.append((999, [rot(*a) + (5.4,), rot(*b) + (5.4,)], GREY))
+    faces.sort(key=lambda f: f[0])
+    return faces
+
+CAR_SCALE = 0.78
+ANCHOR = (8.0, 10.0)            # where the car's ground centre lands in the 16x16 sprite
+
+def render_car15(design, k, cage=False, ss=6, scale=None, size=16, anchor=None):
+    ang = k * 2 * math.pi / NDIR
+    S = (scale or CAR_SCALE)
+    ax, ay = anchor or ANCHOR
+    W = size * ss
+    im = Image.new('L', (W, W), 0); d = ImageDraw.Draw(im)
+    def P(x, y, z): return ((x - y) * S * ss + ax * ss, ((x + y) / 2 - z) * S * ss + ay * ss)
+    for depth, pts, c in _faces(design, ang, cage):
+        if len(pts) == 1:
+            x, y = P(*pts[0]); r = 0.55 * S * ss
+            d.ellipse([x - r, y - r, x + r, y + r], fill=c)
+        elif len(pts) == 2:
+            d.line([P(*pts[0]), P(*pts[1])], fill=c, width=max(1, int(0.5 * ss)))
+        else:
+            d.polygon([P(*p) for p in pts], fill=c)
+    a = np.array(im).reshape(size, ss, size, ss).transpose(0, 2, 1, 3).reshape(size, size, ss * ss)
+    out = np.zeros((size, size), np.uint8)
+    for y in range(size):
+        for x in range(size):
+            cell = a[y, x]; nz = cell[cell > 0]
+            if len(nz) < ss * ss * 0.38: continue
+            vals, cnt = np.unique(nz, return_counts=True)
+            best = vals[np.argmax(cnt)]
+            for pr in PRIO:
+                if pr in vals and cnt[list(vals).index(pr)] >= ss * ss * 0.22: best = pr; break
+            out[y, x] = best
+    # a dark outline around the car
+    m = out > 0
+    o = np.zeros_like(m)
+    o[1:, :] |= m[:-1, :]; o[:-1, :] |= m[1:, :]; o[:, 1:] |= m[:, :-1]; o[:, :-1] |= m[:, 1:]
+    out[o & ~m] = OUT
+    return out
+
+def car15_bytes(arr):
+    """16 rows of 4 bit pixels -> per row: plane 0, plane 1, plane 2, plane 3 words"""
+    out = bytearray()
+    for row in arr:
+        w = [0, 0, 0, 0]
+        for i, v in enumerate(row[:16]):
+            for p in range(4):
+                if v >> p & 1: w[p] |= 0x8000 >> i
+        for p in range(4): out += w[p].to_bytes(2, 'big')
+    return bytes(out)
+
+def fit_cars():
+    """one scale for all designs so every direction fits in 16x16 with its outline"""
+    global CAR_SCALE
+    for s in [x / 100 for x in range(140, 60, -2)]:
+        CAR_SCALE = s
+        ok = True
+        for dsn in MODELS:
+            for k in range(16):
+                a = render_car15(dsn, k, True, ss=3)
+                ys, xs = np.nonzero(a)
+                if len(xs) == 0 or xs.min() < 1 or xs.max() > 14 or ys.min() < 0 or ys.max() > 15: ok = False; break
+            if not ok: break
+        if ok: return s
+    return CAR_SCALE

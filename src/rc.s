@@ -97,7 +97,10 @@ start:
 	moveq	#0,d0
 	jsr	_LVOOpenLibrary(a6)
 	move.l	d0,dosbase
+	tst.b	demo_flag
+	bne.s	.nrec
 	bsr	load_records
+.nrec
 
 	move.l	gfxbase,a6
 	move.l	34(a6),oldview
@@ -492,64 +495,87 @@ hide_sprite:				; d3 = sprite
 	movem.l	(sp)+,d3/a0
 	rts
 
-; put_sprite: d3 = sprite 0..7, a0 = 16 x CAR_H image (4 bytes a row),
+; put_car: d3 = car 0..3 (sprites 2*d3 and 2*d3+1, attached: 15 colours),
+; a0 = 16 x CAR_H image (8 bytes a row: planes 0, 1, 2, 3), d4 = colour slot 0..3,
 ; d0 = x, d1 = y in the view (top left), clipped to the track view
-put_sprite:
-	movem.l	d0-d6/a0-a1,-(sp)
+put_car:
+	movem.l	d0-d7/a0-a2,-(sp)
 	move.w	d3,d5
+	add.w	d5,d5
 	mulu	#SPRBUF,d5
 	lea	sprbufs,a1
-	add.l	d5,a1
+	add.l	d5,a1			; the even sprite
+	lea	SPRBUF(a1),a2		; the odd one
 	cmp.w	#-15,d0
-	blt.s	.hide
+	blt	.hide
 	cmp.w	#319,d0
-	bgt.s	.hide
+	bgt	.hide
 	moveq	#CAR_H,d2		; rows
 	tst.w	d1
 	bpl.s	.t
 	add.w	d1,d2			; clip at the top
-	ble.s	.hide
-	move.w	d1,d4
-	neg.w	d4
-	lsl.w	#2,d4
-	add.w	d4,a0
+	ble	.hide
+	move.w	d1,d6
+	neg.w	d6
+	lsl.w	#3,d6
+	add.w	d6,a0
 	moveq	#0,d1
-.t	move.w	d1,d4
-	add.w	d2,d4
-	sub.w	#VIEW_H,d4		; clip at the bottom
+.t	move.w	d1,d6
+	add.w	d2,d6
+	sub.w	#VIEW_H,d6		; clip at the bottom
 	ble.s	.b
-	sub.w	d4,d2
-	ble.s	.hide
+	sub.w	d6,d2
+	ble	.hide
 .b	add.w	#$2c,d1			; VSTART
 	add.w	#$81,d0			; HSTART
 	move.w	d1,d3
 	add.w	d2,d3			; VSTOP
-	move.w	d1,d4
-	lsl.w	#8,d4
-	move.w	d0,d6
-	lsr.w	#1,d6
-	and.w	#$ff,d6
-	or.w	d6,d4
-	move.w	d4,(a1)+		; pos
-	move.w	d3,d4
-	lsl.w	#8,d4
+	move.w	d1,d6
+	lsl.w	#8,d6
+	move.w	d0,d7
+	lsr.w	#1,d7
+	and.w	#$ff,d7
+	or.w	d7,d6
+	move.w	d6,(a1)+		; pos
+	move.w	d6,(a2)+
+	move.w	d3,d6
+	lsl.w	#8,d6
 	btst	#8,d1
 	beq.s	.n1
-	bset	#2,d4
+	bset	#2,d6
 .n1	btst	#8,d3
 	beq.s	.n2
-	bset	#1,d4
+	bset	#1,d6
 .n2	btst	#0,d0
 	beq.s	.n3
-	bset	#0,d4
-.n3	move.w	d4,(a1)+		; ctl
+	bset	#0,d6
+.n3	move.w	d6,(a1)+		; ctl
+	bset	#7,d6			; attached
+	move.w	d6,(a2)+
 	subq.w	#1,d2
-.c	move.l	(a0)+,(a1)+
+.c	move.l	(a0)+,(a1)+		; planes 0 and 1
+	move.w	2-4(a0),d5		; plane 1 = the body colour pixels
+	move.w	(a0)+,d6		; plane 2
+	move.w	(a0)+,d7		; plane 3
+	move.w	d5,d3
+	not.w	d3
+	and.w	d3,d6
+	and.w	d3,d7
+	btst	#0,d4
+	beq.s	.s1
+	or.w	d5,d6
+.s1	btst	#1,d4
+	beq.s	.s2
+	or.w	d5,d7
+.s2	move.w	d6,(a2)+
+	move.w	d7,(a2)+
 	dbf	d2,.c
 	clr.l	(a1)			; end
+	clr.l	(a2)
 	bra.s	.x
 .hide	clr.l	(a1)
-.x	movem.l	(sp)+,d0-d6/a0-a1
+	clr.l	(a2)
+.x	movem.l	(sp)+,d0-d7/a0-a2
 	rts
 
 ;==============================================================================
@@ -1138,6 +1164,7 @@ set_state:				; a0 = the new state
 gfxname		dc.b	'graphics.library',0
 dosname		dc.b	'dos.library',0
 recname		dc.b	'RCTurbo.dat',0
+demo_flag	dc.b	DEMO
 	even
 ; keyboard: raw key code, action
 keymap		dc.b	$40,A_SPACE,$44,A_RET,$43,A_RET

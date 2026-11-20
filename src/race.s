@@ -116,6 +116,11 @@ race_setup:
 	move.w	#WSZ*4/2-1,d0
 .zw	clr.w	(a1)+
 	dbf	d0,.zw
+	lea	bobsave,a1
+	moveq	#3,d0
+.zb	clr.w	BB_ON(a1)
+	lea	BBSZ(a1),a1
+	dbf	d0,.zb
 	move.l	trk_ptr,a0
 	move.l	20(a0),a1		; the grid: 4 x (x.l, y.l, a.w)
 	lea	cars,a2
@@ -316,23 +321,21 @@ race_palette:
 	lea	race_shared,a1
 	moveq	#0,d0
 	move.b	r_paint,d0
-	mulu	#6,d0
+	lsl.w	#2,d0
 	lea	paint_pal,a0
 	add.w	d0,a0
-	move.w	(a0)+,2(a1)
-	move.w	(a0)+,4(a1)
+	move.w	(a0)+,4(a1)		; 18, 19: your car
 	move.w	(a0)+,6(a1)
 	lea	race_pers,a0
 	moveq	#0,d1
 .p	move.w	(a0)+,d0
-	mulu	#6,d0
+	lsl.w	#2,d0
 	lea	pers_pal,a1
 	add.w	d0,a1
-	lea	race_shared+10,a2
+	lea	race_shared+12,a2	; 22, 23 / 26, 27 / 30, 31
 	move.w	d1,d2
 	lsl.w	#3,d2
 	add.w	d2,a2
-	move.w	(a1)+,(a2)+
 	move.w	(a1)+,(a2)+
 	move.w	(a1)+,(a2)+
 	addq.w	#1,d1
@@ -391,6 +394,7 @@ do_step:
 	move.w	race_phase,d0
 	beq	countdown
 	; racing (phase 1) or after your finish (phase 2)
+	bsr	bobs_restore
 	lea	cars,a2
 	moveq	#3,d7
 .cars	tst.w	C_PERS(a2)
@@ -665,15 +669,15 @@ wp_point:
 	move.l	(sp)+,a0
 	rts
 
-; Erik: aim for a pickup 1..5 points ahead (d1/d2 = target, changed if found)
+; Erik: aim for a power-up 1..5 points ahead (d1/d2 = target, changed if found)
 ai_pickup_target:
 	movem.l	d0/d3-d5/a0,-(sp)
 	lea	spots,a0
 	moveq	#NSPOTS-1,d5
 .l	move.w	SP_TYPE(a0),d0
 	beq.s	.n
-	cmp.w	#IC_L_S+1,d0		; (letters are not for him)
-	bhs.s	.n
+	bsr	ai_can_take
+	beq.s	.n
 	move.w	SP_WP(a0),d3
 	sub.w	C_WP(a2),d3
 	bpl.s	.d
@@ -1949,10 +1953,10 @@ spots_update:
 	cmp.w	#13,d0
 	bgt.s	.nc
 	move.w	SP_TYPE(a4),d0
-	cmp.w	#IC_L_S+1,d0		; letters: only for you
-	blo.s	.take
-	tst.w	C_PERS(a3)
-	bpl.s	.nc
+	tst.w	C_PERS(a3)		; you take everything
+	bmi.s	.take
+	bsr	ai_can_take		; the computer cars: weapons and power-ups only
+	beq.s	.nc
 .take	move.l	a4,a2
 	bsr	spot_hide
 	clr.w	SP_T(a4)
@@ -1967,30 +1971,33 @@ spots_update:
 	movem.l	(sp)+,d0-d7/a0-a4
 	rts
 
+; ai_can_take: d0 = item (icon + 1) -> ne when a computer car may take it:
+; weapons, roll cage, turbo, shield, repair (not the upgrades, cash or letters)
+ai_can_take:
+	move.l	d0,-(sp)
+	cmp.w	#IC_MISSILES+1,d0
+	blo.s	.no
+	cmp.w	#IC_HOMING+1,d0
+	bls.s	.yes
+	cmp.w	#IC_CAGE+1,d0
+	blo.s	.no
+	cmp.w	#IC_REPAIR+1,d0
+	bhi.s	.no
+.yes	moveq	#1,d0
+	movem.l	(sp)+,d0
+	rts
+.no	moveq	#0,d0
+	movem.l	(sp)+,d0
+	rts
+
 ; apply_item: car a2 picked up icon d0
 apply_item:
 	movem.l	d0-d2/a0,-(sp)
 	move.w	d0,d2
 	tst.w	C_PERS(a2)
 	bmi.s	.you
-	; a computer car
-	cmp.w	#IC_MOTOR,d2
-	bne.s	.a1
-	add.w	#30,C_TOP(a2)
-	cmp.w	#3,C_PERS(a2)		; Erik keeps his upgrades
-	bne	.x
-	cmp.b	#6,r_erik
-	bhs	.x
-	addq.b	#1,r_erik
-	bra	.x
-.a1	cmp.w	#IC_TIRES,d2
-	bne.s	.a2
-	add.w	#10,C_GRIP(a2)
-	bra	.x
-.a2	cmp.w	#IC_BATTERY,d2
-	bne	.common
-	addq.w	#3,C_ACC(a2)
-	bra	.x
+	; a computer car (weapons and power-ups only, see ai_can_take)
+	bra	.common
 .you	cmp.w	#IC_L_S,d2
 	blo.s	.notl
 	addq.b	#1,r_letters
@@ -2152,15 +2159,17 @@ race_draw:
 	move.w	cam_x,d0
 	move.w	cam_y,d1
 	bsr	set_scroll
-	; the cars: sprites 0, 2, 4, 6
+	; the cars: attached sprite pairs (0+1, 2+3, 4+5, 6+7)
 	moveq	#0,d7
 .car	move.w	d7,d3
-	add.w	d3,d3
 	tst.w	C_SHLD(a2)		; the shield: blinking
 	beq.s	.vis
 	move.l	race_step,d0
 	btst	#1,d0
 	beq.s	.vis
+	add.w	d3,d3
+	bsr	hide_sprite
+	addq.w	#1,d3
 	bsr	hide_sprite
 	bra.s	.nc
 .vis	move.w	C_ANG(a2),d0
@@ -2179,27 +2188,60 @@ race_draw:
 	add.l	d0,a0
 	move.w	C_SX(a2),d0
 	sub.w	cam_x,d0
-	subq.w	#8,d0
+	sub.w	#CAR_AX,d0
 	move.w	C_SY(a2),d1
 	sub.w	cam_y,d1
-	sub.w	#10,d1
+	sub.w	#CAR_AY,d1
 	sub.w	C_JH(a2),d1
-	bsr	put_sprite
+	move.w	d7,d4			; colour slot = car number
+	bsr	put_car
 .nc	lea	CARSZ(a2),a2
 	addq.w	#1,d7
 	cmp.w	#4,d7
 	blo	.car
-	; the weapons: sprites 1, 3, 5, 7
+	bsr	bobs_draw
+	movem.l	(sp)+,d0-d7/a0-a3
+	rts
+
+;------------------------------------------------------------------------------
+; missiles, bombs and explosions: drawn into the track picture (all 8 sprites
+; are the cars), with the picture under them saved and put back every step
+;------------------------------------------------------------------------------
+BB_ON		equ	0
+BB_ADDR		equ	2
+BB_DATA		equ	6
+BBSZ		equ	6+16*5*4
+
+bobs_restore:
+	movem.l	d0-d2/a0-a2,-(sp)
+	lea	bobsave+BBSZ*3,a2	; the last one drawn first
+	moveq	#3,d2
+.l	tst.w	BB_ON(a2)
+	beq.s	.n
+	clr.w	BB_ON(a2)
+	move.l	BB_ADDR(a2),a0
+	lea	BB_DATA(a2),a1
+	moveq	#15,d0
+.r	move.l	(a1)+,(a0)
+	move.l	(a1)+,TRK_PB(a0)
+	move.l	(a1)+,TRK_PB*2(a0)
+	move.l	(a1)+,TRK_PB*3(a0)
+	move.l	(a1)+,TRK_PB*4(a0)
+	lea	TRK_RB(a0),a0
+	dbf	d0,.r
+.n	lea	-BBSZ(a2),a2
+	dbf	d2,.l
+	movem.l	(sp)+,d0-d2/a0-a2
+	rts
+
+bobs_draw:
+	movem.l	d0-d7/a0-a4,-(sp)
 	lea	weaps,a3
+	lea	bobsave,a4
 	moveq	#0,d7
-.w	move.w	d7,d3
-	add.w	d3,d3
-	addq.w	#1,d3
-	move.w	W_ACT(a3),d0
-	bne.s	.ws
-	bsr	hide_sprite
-	bra.s	.nw
-.ws	cmp.w	#2,d0
+.w	move.w	W_ACT(a3),d0
+	beq	.nw
+	cmp.w	#2,d0
 	beq.s	.wb
 	cmp.w	#4,d0
 	beq.s	.we
@@ -2217,26 +2259,67 @@ race_draw:
 .we	move.w	W_FR(a3),d0		; an explosion
 	lsr.w	#1,d0
 	add.w	#10,d0
-.wf	mulu	#64,d0
-	lea	wspr_gfx,a0
+.wf	mulu	#192,d0
+	lea	wbob_gfx,a0
 	add.l	d0,a0
-	move.l	W_X(a3),d0
+	move.l	W_X(a3),d0		; top left in the track picture
 	sub.l	W_Y(a3),d0
 	asr.l	#8,d0
 	add.w	#320-8,d0
-	sub.w	cam_x,d0
 	move.l	W_X(a3),d1
 	add.l	W_Y(a3),d1
 	asr.l	#8,d1
 	asr.w	#1,d1
 	sub.w	#12,d1
-	sub.w	cam_y,d1
-	bsr	put_sprite
+	tst.w	d0
+	bmi	.nw
+	cmp.w	#WW-32,d0
+	bgt	.nw
+	tst.w	d1
+	bmi	.nw
+	cmp.w	#WH-16,d1
+	bgt	.nw
+	move.w	d0,d5
+	and.w	#15,d5			; shift
+	lsr.w	#4,d0
+	add.w	d0,d0
+	mulu	#TRK_RB,d1
+	add.w	d0,d1
+	lea	trackbm,a1
+	add.l	d1,a1
+	move.l	a1,BB_ADDR(a4)
+	move.w	#1,BB_ON(a4)
+	lea	BB_DATA(a4),a2
+	moveq	#15,d6
+.row	moveq	#0,d2
+	move.w	(a0)+,d2		; mask
+	swap	d2
+	lsr.l	d5,d2
+	move.l	d2,d3
+	not.l	d3
+	move.l	a1,-(sp)
+	moveq	#4,d4
+.pl	move.l	(a1),d0
+	move.l	d0,(a2)+		; save
+	and.l	d3,d0
+	moveq	#0,d1
+	move.w	(a0)+,d1
+	swap	d1
+	lsr.l	d5,d1
+	and.l	d2,d1
+	or.l	d1,d0
+	move.l	d0,(a1)
+	lea	TRK_PB(a1),a1
+	dbf	d4,.pl
+	move.l	(sp)+,a1
+	lea	TRK_RB(a1),a1
+	dbf	d6,.row
 .nw	lea	WSZ(a3),a3
+	lea	BBSZ(a4),a4
 	addq.w	#1,d7
 	cmp.w	#4,d7
 	blo	.w
-	movem.l	(sp)+,d0-d7/a0-a3
+	movem.l	(sp)+,d0-d7/a0-a4
 	rts
 
 clamp_cam:
@@ -2630,7 +2713,7 @@ minimap_dots:
 	lsr.b	d0,d3
 	move.w	d7,d2
 	lsl.w	#2,d2
-	add.w	#18,d2
+	add.w	#19,d2
 	moveq	#1,d1
 .dr	move.l	a1,a0
 	moveq	#0,d0

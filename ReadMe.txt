@@ -1,4 +1,4 @@
-RC TURBO CUP  V0.1 - TEST VERSION
+RC TURBO CUP  V0.2 - TEST VERSION
 Created By Mark Stronks, Stronkie Soft (c) 2026
 
 Isometric toy car racing for the Amiga 500.
@@ -39,12 +39,14 @@ ON THE TRACK
   Yellow zippers speed you up, ramps make you jump.
   Watch out for oil, marbles, water, sand, loose batteries and
   (in the lab) electric plates.
+  The computer cars use the weapons and power-ups too, but the
+  upgrades, the cash and the letters are only for you.
 
 YOUR RIVALS
   SPEEDY SAM     fast, but crashes a lot
   CAREFUL CARLA  slow in the bends, never makes a mistake
   MAD MAX        fires at you and rams you
-  ENGINEER ERIK  drives over every upgrade - and keeps them
+  ENGINEER ERIK  goes for every power-up on the track
 
 THE SHOP
   Motor, tyres, battery, armour, a bigger weapon rack, missiles,

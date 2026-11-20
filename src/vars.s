@@ -77,5 +77,6 @@ h_msgdirty	ds.b	1
 letters_done	ds.b	1
 	even
 mm_save		ds.b	4*14
+bobsave		ds.b	(6+16*5*4)*4
 surfmap		ds.b	SURF_SIZE
 trkfile		ds.b	MAXTRK+16

@@ -179,7 +179,10 @@ draw_title_menu:
 	cmp.w	#6,d7
 	blo	.l
 	lea	str_hint,a0
-	move.w	#222,d1
+	tst.b	demo_flag
+	beq.s	.h
+	lea	str_demohint,a0
+.h	move.w	#222,d1
 	moveq	#M_LBLUE,d2
 	bsr	mctext
 	movem.l	(sp)+,d0-d7/a0
@@ -885,7 +888,13 @@ st_results:
 	bls.s	.q
 	lea	st_intro_in,a0		; try again (one spare car less)
 	bra	set_state
-.q	cmp.b	#8,r_race
+.q	tst.b	demo_flag
+	beq.s	.full
+	cmp.b	#2,r_race
+	blo.s	.full
+	lea	st_demoend_in,a0
+	bra	set_state
+.full	cmp.b	#8,r_race
 	blo.s	.shop
 	lea	st_cupend_in,a0
 	bra	set_state
@@ -1295,10 +1304,42 @@ st_gameover_in:
 	bra	set_state
 
 ;------------------------------------------------------------------------------
+; the end of the demo
+;------------------------------------------------------------------------------
+st_demoend_in:
+	clr.b	r_active
+	bsr	show_menu_bg
+	lea	str_demoend_h,a0
+	bsr	header
+	lea	demoend_text,a0
+	moveq	#70,d1
+.l	tst.b	(a0)
+	beq.s	.e
+	moveq	#M_WHITE,d2
+	cmp.b	#'*',(a0)
+	bne.s	.w
+	addq.l	#1,a0
+	moveq	#M_YELLOW,d2
+.w	bsr	mctext
+.n	tst.b	(a0)+
+	bne.s	.n
+	add.w	#12,d1
+	bra.s	.l
+.e	moveq	#SONG_WIN,d0
+	moveq	#48,d1
+	bsr	play_song
+	lea	st_back_title,a0
+	bra	set_state
+
+;------------------------------------------------------------------------------
 ; practice: any track, no money
 ;------------------------------------------------------------------------------
 st_practice_in:
 	st	practice
+	tst.b	demo_flag
+	beq.s	.f
+	and.w	#1,cur_track
+.f
 	clr.b	race_weather
 	clr.w	wind_x
 	clr.w	wind_y
@@ -1354,7 +1395,10 @@ st_practice:
 	beq.s	.f
 	add.w	cur_track,d0
 	and.w	#7,d0
-	move.w	d0,cur_track
+	tst.b	demo_flag
+	beq.s	.all
+	and.w	#1,d0
+.all	move.w	d0,cur_track
 	moveq	#S_CLICK,d0
 	bsr	sfx
 	bsr	draw_practice
@@ -1402,7 +1446,11 @@ load_records:
 	rts
 
 save_records:
-	movem.l	d0-d7/a0-a6,-(sp)
+	tst.b	demo_flag		; the demo saves nothing
+	bne.s	.demo
+	bra.s	.go
+.demo	rts
+.go	movem.l	d0-d7/a0-a6,-(sp)
 	move.l	#'RCT1',records
 	bsr	os_on
 	move.l	dosbase,d0
@@ -1445,6 +1493,21 @@ str_ctrl1	dc.b	'FIRE = GAS',0
 str_on		dc.b	'ON',0
 str_off		dc.b	'OFF',0
 str_hint	dc.b	'JOYSTICK UP/DOWN AND FIRE',0
+str_demohint	dc.b	'FREE DEMO: 2 OF THE 8 TRACKS',0
+str_demoend_h	dc.b	'THE END OF THE DEMO',0
+demoend_text
+	dc.b	'*WELL DRIVEN!',0
+	dc.b	' ',0
+	dc.b	'THE FULL GAME HAS:',0
+	dc.b	'8 TRACKS IN 8 TOY WORLDS',0
+	dc.b	'3 CUPS: AMATEUR, NATIONAL, WORLD',0
+	dc.b	'THE SHOP, 5 CARS, RAIN AND WIND',0
+	dc.b	'AND YOUR CAREER SAVED ON DISK',0
+	dc.b	' ',0
+	dc.b	'*GET IT ON STRONKIE.ITCH.IO',0
+	dc.b	' ',0
+	dc.b	'CREATED BY MARK STRONKS, STRONKIE SOFT',0
+	dc.b	0
 str_howto_h	dc.b	'HOW TO PLAY',0
 howto_text
 	dc.b	'*RACE YOUR RC CAR AGAINST 3 RIVALS.',0
@@ -1529,7 +1592,7 @@ ps_erik		dc.b	'ENGINEER ERIK',0
 pd_sam		dc.b	'SPEEDY SAM    - FAST, CRASHES',0
 pd_carla	dc.b	'CAREFUL CARLA - STEADY RACER',0
 pd_max		dc.b	'MAD MAX       - ATTACKS YOU',0
-pd_erik		dc.b	'ENGINEER ERIK - GRABS UPGRADES',0
+pd_erik		dc.b	'ENGINEER ERIK - GRABS POWER-UPS',0
 st_motor	dc.b	'MOTOR',0
 st_tires	dc.b	'TIRES',0
 st_batt		dc.b	'BATTERY',0

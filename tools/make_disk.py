@@ -283,13 +283,14 @@ def main():
     adf.addfile(880, GAME + '.game', game)
     adf.addfile(880, GAME + '.info', tool_icon)
     adf.addfile(880, 'ReadMe.txt', readme)
-    adf.addfile(880, 'Install', installer)
-    adf.addfile(880, 'Install.info', install_icon)
+    if not os.environ.get('DISK_NOINSTALL'):
+        adf.addfile(880, 'Install', installer)
+        adf.addfile(880, 'Install.info', install_icon)
     adf.addfile(880, 'Disk.info', disk_icon)
     tdir = adf.mkdir(880, 'Tracks')
     tracks = []
-    for i in range(1, 9):
-        t = open(os.path.join(B, 'gen', 'Track%d' % i), 'rb').read(); tracks.append(t)
+    for i in range(1, int(os.environ.get('DISK_TRACKS', '8')) + 1):
+        t = open(os.path.join(ROOT, 'build', 'gen', 'Track%d' % i), 'rb').read(); tracks.append(t)
         adf.addfile(tdir, 'Track%d' % i, t)
     s = adf.mkdir(880, 'S')
     adf.addfile(s, 'Startup-Sequence', (GAME + '\n').encode())

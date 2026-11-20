@@ -18,9 +18,11 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import make_disk as md
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
-B = os.path.join(ROOT, 'build')
+B = os.path.join(ROOT, os.environ.get('WHD_BUILD', 'build'))
+GEN = os.path.join(ROOT, 'build', 'gen')
+DEMO = bool(os.environ.get('WHD_DEMO'))
 VER = sys.argv[1] if len(sys.argv) > 1 else md.VER
-PKG = 'RCTurboCup'
+PKG = os.environ.get('WHD_PKG', 'RCTurboCup')
 SLAVE = PKG + '.slave'
 
 README = """RC TURBO CUP  V{ver} - {kind} - WHDLoad version
@@ -32,26 +34,26 @@ WHAT YOU NEED
   is needed: the game brings everything it needs.
 
 INSTALL
-  Copy the drawer RCTurboCup (with its icon) anywhere on your
+  Copy the drawer {pkg} (with its icon) anywhere on your
   hard drive, for example to Games:. Or unpack the .lha there:
-      lha x RCTurboCup_V{ver}_WHDLoad.lha Games:
+      lha x {pkg}_V{ver}_WHDLoad.lha Games:
 
 PLAY
-  Double click the RCTurboCup icon in the drawer.
+  Double click the {pkg} icon in the drawer.
   F10 quits back to Workbench.
-  Your career is saved in data/RCTurbo.dat.
+  Your career is saved in data/RCTurbo.dat (not in the free demo).
 
-  From the CLI:  cd Games:RCTurboCup
-                 WHDLoad RCTurboCup.slave PRELOAD
+  From the CLI:  cd Games:{pkg}
+                 WHDLoad {pkg}.slave PRELOAD
 
 HOW TO PLAY
   See HOW TO PLAY on the title screen, and the game page on itch.io:
   https://stronkie.itch.io/
 
 FILES
-  RCTurboCup.slave     the WHDLoad slave
+  {pkg}.slave     the WHDLoad slave
   data/RCTurbo.game    the game
-  data/Tracks/         the 8 tracks
+  data/Tracks/         the tracks
 
 Created By Mark Stronks, Stronkie Soft
 """
@@ -125,7 +127,7 @@ def lha_read(path):
 def main():
     root = os.path.join(B, 'whdload'); shutil.rmtree(root, ignore_errors=True)
     pkg = os.path.join(root, PKG); os.makedirs(os.path.join(pkg, 'data'))
-    kind = 'FINAL RELEASE' if VER.startswith('1') else 'TEST VERSION'
+    kind = 'FREE DEMO' if DEMO else ('FINAL RELEASE' if VER.startswith('1') else 'TEST VERSION')
     open(os.path.join(B, 'whdver.i'), 'w').write("s_info\tdc.b\t'V%s %s - installed by Stronkie Soft',10\n" % (VER, kind.title()))
     subprocess.check_call([sys.executable, os.path.join(ROOT, 'tools', 'asm68k.py'), os.path.join(ROOT, 'src', 'whdload.s'), '-I', B,
                            '-o', os.path.join(B, SLAVE), '-map', os.path.join(B, 'whdload.map')], stdout=subprocess.DEVNULL)
@@ -133,14 +135,14 @@ def main():
         PKG + '/' + SLAVE: open(os.path.join(B, SLAVE), 'rb').read(),
         PKG + '/' + PKG + '.info': md.diskobject(4, md.icon_image(), stack=10240, tool='WHDLoad',
                                                  tooltypes=('SLAVE=' + SLAVE, 'PRELOAD')),
-        PKG + '/ReadMe': README.format(ver=VER, kind=kind).encode('latin-1'),
+        PKG + '/ReadMe': README.format(ver=VER, kind=kind, pkg=PKG).encode('latin-1'),
         PKG + '/ReadMe.info': md.diskobject(4, text_icon(), stack=4096, tool='SYS:Utilities/More'),
         PKG + '/data/RCTurbo.game': open(os.path.join(B, 'RCTurbo.game'), 'rb').read(),
         PKG + '.info': md.diskobject(2, md.drawer_image()),
     }
     os.makedirs(os.path.join(pkg, 'data', 'Tracks'))
-    for i in range(1, 9):
-        files[PKG + '/data/Tracks/Track%d' % i] = open(os.path.join(B, 'gen', 'Track%d' % i), 'rb').read()
+    for i in range(1, int(os.environ.get('WHD_TRACKS', '8')) + 1):
+        files[PKG + '/data/Tracks/Track%d' % i] = open(os.path.join(GEN, 'Track%d' % i), 'rb').read()
     for n, d in files.items():
         open(os.path.join(root, n), 'wb').write(d)
     now = time.time()
