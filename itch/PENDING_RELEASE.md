@@ -4,8 +4,11 @@ Mark publishes to itch.io on a fixed day of the week (Sunday), not after every b
 Everything that is built in between is collected here, so the next itch release
 (page update, uploads, devlog, announcement) shows every version since the last one.
 
-**On itch now:** V0.1 TEST VERSION (status In development, paid 2.00€ or more), published 20 November 2026 on request.
-No free demo yet (the page needs one - ask Mark which).
+**On itch now:** V0.2 TEST VERSION (status In development, paid 2.00€ or more), published 20 November 2026 on request.
+Visible: "V0.2 (LATEST) - Disk image ADF / Hard drive / CF card / WHDLoad" (paid), the free demo
+"DEMO (FREE) - Disk image ADF" + "DEMO (FREE) - WHDLoad" (made from V0.2: 2 races + practice, no saving),
+and the free print kit (manual A5, box A3, disk labels A4). V0.1 files are hidden ("Older version - V0.1 - ...").
+Keep the demo as it is.
 
 itch edit page: https://itch.io/game/edit/5410595 (public page https://stronkie.itch.io/rc-turbo-cup)
 
@@ -13,6 +16,10 @@ itch edit page: https://itch.io/game/edit/5410595 (public page https://stronkie.
 (none yet)
 
 ## Released on itch
+
+### 20 November 2026: V0.2 TEST VERSION + free demo + print kit
+- Devlog: https://stronkie.itch.io/rc-turbo-cup/devlog/1794726/rc-turbo-cup-v02-new-15-colour-cars-a-free-demo-and-a-print-kit
+- Announcement: https://stronkie.itch.io/rc-turbo-cup/devlog/1794728/rc-turbo-cup-v02-is-out-please-rate-review-and-help-test
 
 ### 20 November 2026: V0.1 TEST VERSION
 - Files: "V0.1 (LATEST) - Disk image ADF", "V0.1 (LATEST) - Hard drive / CF card", "V0.1 (LATEST) - WHDLoad"
