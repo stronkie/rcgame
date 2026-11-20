@@ -8,7 +8,7 @@ Created By Mark Stronks, Stronkie Soft © 2026
 
 Written in 68000 assembly for a stock Amiga 500 with Kickstart / Workbench 1.3 and a 512K trapdoor expansion (1 MB). Runs from a bootable disk (or a Gotek), from hard drive / CF card and with WHDLoad. Play it with a **joystick** in port 2 (or the keyboard).
 
-**Latest version: V0.2 - TEST VERSION.** On itch.io: https://stronkie.itch.io/rc-turbo-cup
+**Latest version: V0.3 - TEST VERSION.** On itch.io: https://stronkie.itch.io/rc-turbo-cup
 
 ## Features
 
@@ -45,12 +45,12 @@ Written in 68000 assembly for a stock Amiga 500 with Kickstart / Workbench 1.3 a
 
 | File | What it is |
 |---|---|
-| `RCTurboCup_V0.2.adf` | Bootable disk. Boot it, or put it on a Gotek, and the game starts by itself. To put the game on your hard drive: boot Workbench from the hard drive, insert this disk and double click **Install** |
-| `whdload/RCTurboCup_V0.2_WHDLoad.lha` | **WHDLoad version** (also as `.zip`): unpack on your hard drive and double click `RCTurboCup`. Own slave (`src/whdload.s`), no Kickstart image needed, F10 quits |
-| `RCTurboCup_V0.2_harddrive.zip` | Drawer `RCTurboCup` with the game, the tracks, its icon and the ReadMe: copy it and double click `RCTurbo` |
-| `demo/` | The **free demo**: the first 2 races of the Amateur Cup and practice on those 2 tracks (ADF and WHDLoad), nothing is saved |
+| `RCTurboCup_V0.3.adf` | Bootable disk. Boot it, or put it on a Gotek, and the game starts by itself. To put the game on your hard drive: boot Workbench from the hard drive, insert this disk and double click **Install** |
+| `whdload/RCTurboCup_V0.3_WHDLoad.lha` | **WHDLoad version** (also as `.zip`): unpack on your hard drive and double click `RCTurboCup`. Own slave (`src/whdload.s`), no Kickstart image needed, F10 quits |
+| `RCTurboCup_V0.3_harddrive.zip` | Drawer `RCTurboCup` with the game, the tracks, its icon and the ReadMe: copy it and double click `RCTurbo` |
+| `demo/` | The **free demo** (made from V0.2): the first 2 races of the Amateur Cup and practice on those 2 tracks (ADF and WHDLoad), nothing is saved |
 | `print/` | The **print kit**: an 8 page manual (A5), a box to print and fold with the system requirements (A3, and an A4 mini) and disk labels (A4) as PDF |
-| `previous_versions/` | Older versions (V0.1) |
+| `previous_versions/` | Older versions (V0.1, V0.2) |
 
 **Requirements:** Amiga 500 (or any Amiga with a 68000) with Kickstart 1.3 and 1 MB: 512K chip + 512K trapdoor. Joystick in port 2.
 
@@ -87,6 +87,9 @@ Needs python3 with Pillow and numpy. Everything else is in `tools/`:
 Source: `src/main.s` (the full game) and `src/demo.s` (the demo) include `src/rc.s` (start-up, display, scrolling, sprites, unpacking, text, input, sound), `src/race.s` (cars, physics, computer drivers, weapons, pickups, laps, HUD, camera), `src/menus.s` (title, career, shop, results, practice, track loading, saving), `src/loader.s` (the loader with the loading picture), `src/install.s` (the hard disk installer) and `src/whdload.s` (the WHDLoad slave).
 
 ## Version history
+
+### V0.3 - TEST VERSION - 20 November 2026
+- Much easier to get loose from the walls: the car keeps at least half its steering even when it stands still, is pushed a little back towards the track after a wall hit, and turns towards the track by itself when it is slow against a wall
 
 ### V0.2 - TEST VERSION - 20 November 2026
 - New cars: 15 colours each (attached sprite pairs) with a dark outline, two body shades, glass, black tyres, head and tail lights - in all 5 designs, with and without roll cage

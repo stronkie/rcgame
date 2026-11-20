@@ -13,7 +13,19 @@ Keep the demo as it is.
 itch edit page: https://itch.io/game/edit/5410595 (public page https://stronkie.itch.io/rc-turbo-cup)
 
 ## Versions waiting to be published
-(none yet)
+
+### V0.3 - TEST VERSION - 20 November 2026
+- Much easier to get loose from the walls: the car keeps at least half its steering even when it stands still,
+  is pushed a little back towards the track after a wall hit, and turns towards the track by itself when it is
+  slow against a wall
+
+## To do on the next release day
+1. Upload `RCTurboCup_V0.3.adf` as "V0.3 (LATEST) - Disk image ADF", `RCTurboCup_V0.3_harddrive.zip` as
+   "V0.3 (LATEST) - Hard drive / CF card" and `whdload/RCTurboCup_V0.3_WHDLoad.lha` as "V0.3 (LATEST) - WHDLoad"
+   (paid, same price settings as the V0.2 files). Rename the V0.2 files to "Older version - V0.2 - ..." and hide them.
+2. Keep the free demo (V0.2) and the print kit as they are.
+3. Page description: add "New in V0.3" and the V0.3 line in the version history.
+4. Devlog (major update) and announcement.
 
 ## Released on itch
 

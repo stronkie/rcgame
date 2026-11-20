@@ -1,4 +1,4 @@
-RC TURBO CUP  V0.2 - TEST VERSION
+RC TURBO CUP  V0.3 - TEST VERSION
 Created By Mark Stronks, Stronkie Soft (c) 2026
 
 Isometric toy car racing for the Amiga 500.

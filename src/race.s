@@ -1116,7 +1116,10 @@ car_physics:
 	neg.w	d0
 .sp	cmp.w	#220,d2
 	bhs.s	.full
-	mulu	d2,d1
+	cmp.w	#110,d2			; at least half the steering, even standing still
+	bhs.s	.lo
+	move.w	#110,d2
+.lo	mulu	d2,d1
 	divu	#220,d1
 .full	muls	d1,d0
 	add.w	d0,C_ANG(a2)
@@ -1211,6 +1214,7 @@ car_physics:
 	neg.w	d0
 	asr.w	#1,d0
 	move.w	d0,C_VY(a2)
+	bsr	wall_unstick
 	bra.s	.moved
 .try_y	move.l	C_X(a2),d0
 	move.l	C_Y(a2),d1
@@ -1225,6 +1229,7 @@ car_physics:
 	neg.w	d0
 	asr.w	#1,d0
 	move.w	d0,C_VX(a2)
+	bsr	wall_unstick
 	bra.s	.moved
 .stop	move.w	C_SPD(a2),d0
 	bsr	wall_hit
@@ -1240,6 +1245,7 @@ car_physics:
 	asr.w	#2,d0
 	neg.w	d0
 	move.w	d0,C_SPD(a2)
+	bsr	wall_unstick
 	bra.s	.moved
 .free	add.l	d2,C_X(a2)
 	add.l	d3,C_Y(a2)
@@ -1257,6 +1263,59 @@ car_physics:
 .jh	move.w	d0,C_JH(a2)
 	bsr	car_screen
 	movem.l	(sp)+,d0-d7/a0-a1
+	rts
+
+; wall_unstick: after a wall hit, push the car 3/4 unit towards the racing line
+; (the point after its nearest one), so it does not stay stuck against the wall
+wall_unstick:
+	movem.l	d0-d4,-(sp)
+	move.w	C_WP(a2),d0
+	addq.w	#1,d0
+	bsr	wp_point		; d1, d2 = the point
+	move.l	C_X(a2),d0
+	asr.l	#8,d0
+	sub.w	d0,d1
+	move.l	C_Y(a2),d0
+	asr.l	#8,d0
+	sub.w	d0,d2
+	move.w	d1,d0
+	move.w	d2,d1
+	bsr	atan2
+	move.w	d0,d2
+	; slow against the wall: turn a little towards the track by itself
+	move.w	C_SPD(a2),d1
+	bpl.s	.ab
+	neg.w	d1
+.ab	cmp.w	#250,d1
+	bhs.s	.noturn
+	move.w	d0,d1
+	sub.w	C_ANG(a2),d1
+	ext.w	d1
+	moveq	#5,d3
+	cmp.w	d3,d1
+	ble.s	.t1
+	move.w	d3,d1
+.t1	neg.w	d3
+	cmp.w	d3,d1
+	bge.s	.t2
+	move.w	d3,d1
+.t2	add.w	d1,C_ANG(a2)
+	and.w	#255,C_ANG(a2)
+.noturn	bsr	sincos			; d3 = cos, d4 = sin (*256)
+	muls	#3,d3
+	asr.l	#2,d3
+	muls	#3,d4
+	asr.l	#2,d4
+	move.l	C_X(a2),d0		; only into free space
+	add.l	d3,d0
+	move.l	C_Y(a2),d1
+	add.l	d4,d1
+	bsr	surf_at
+	cmp.w	#SURF_WALL,d0
+	beq.s	.x
+	add.l	d3,C_X(a2)
+	add.l	d4,C_Y(a2)
+.x	movem.l	(sp)+,d0-d4
 	rts
 
 ; wall_hit: d0 = the speed into the wall: slow down, damage, a bump sound
