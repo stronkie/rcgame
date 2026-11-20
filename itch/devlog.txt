@@ -1,0 +1,28 @@
+RC Turbo Cup V0.1 - the first test version!
+
+A new Stronkie Soft game for the Amiga 500: isometric toy car racing.
+
+Race a radio controlled toy car through oversized rooms: a garage workbench,
+the living room carpet, the garden path, a toy store, the school playground,
+a science lab, a building site and the championship arena. The tracks scroll
+smoothly in 32 colours, with walls, kerbs and giant props everywhere.
+
+What is in V0.1:
+- 8 tracks, 4 cars, 4 laps: finish in the top 3 to go on
+- A career with three cups: Amateur, National and the World Championship
+- Four rivals: Speedy Sam, Careful Carla, Mad Max and Engineer Erik
+- Pickups on the track: motor, tires, battery, missiles, bombs, homing
+  missiles, cash, roll cage, turbo, shield and repair
+- Collect the letters S-T-R-O-N-K-I-E for a better car and a new paint job
+- Zippers, ramps, oil, marbles, water, sand and electric plates
+- Rain and wind in the later cups
+- A shop between the races, practice mode and saved best laps
+- Bootable ADF, hard drive version and a WHDLoad version
+
+Needs an Amiga 500 with Kickstart 1.3 and 1 MB (512K + 512K trapdoor).
+
+This is a test version: please try it and tell me what you think in the
+comments - which tracks are too hard, which rival is too fast, what you
+would like to see next (the track editor? replays? a 2 player hotseat?).
+
+Created By Mark Stronks, Stronkie Soft
