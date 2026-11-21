@@ -354,11 +354,14 @@ def car_sprites():
                 prev.paste(im, (k * 17, (dsn * 2 + cage) * 17))
     return bytes(out), prev
 
-def weapon_bobs():
-    """missiles, bombs, explosions: 16x16 bobs in playfield colours; per row: mask, 5 plane words"""
-    frames = [(SP.missile(k), {1: 16, 2: 20, 3: 28}) for k in range(8)]
-    frames += [(SP.bomb(f), {1: 16, 2: 20, 3: 28}) for f in range(2)]
-    frames += [(SP.explosion(f), {1: 16, 2: 24, 3: 28}) for f in range(4)]
+def weapon_bobs(retro=False):
+    """missiles, bombs, explosions: 16x16 bobs in playfield colours; per row: mask, 5 plane words
+    (retro: for the STRONKIE POCKET, colour numbers that give its grey shades: 0 white, 2, 8, 10 black)"""
+    mb = {1: 10, 2: 2, 3: 8} if retro else {1: 16, 2: 20, 3: 28}
+    ex = {1: 10, 2: 8, 3: 0} if retro else {1: 16, 2: 24, 3: 28}
+    frames = [(SP.missile(k), mb) for k in range(8)]
+    frames += [(SP.bomb(f), mb) for f in range(2)]
+    frames += [(SP.explosion(f), ex) for f in range(4)]
     out = bytearray()
     for a, m in frames:
         for row in a:
@@ -831,6 +834,7 @@ def main():
     cars, cprev = car_sprites()
     open(os.path.join(OUT, 'cars.bin'), 'wb').write(cars)
     open(os.path.join(OUT, 'wbob.bin'), 'wb').write(weapon_bobs())
+    open(os.path.join(OUT, 'wbobretro.bin'), 'wb').write(weapon_bobs(True))
     ic, im_, iprev = icons_data()
     open(os.path.join(OUT, 'icons.bin'), 'wb').write(ic); open(os.path.join(OUT, 'iconmask.bin'), 'wb').write(im_)
     open(os.path.join(OUT, 'iconretro.bin'), 'wb').write(icons_retro())
@@ -894,7 +898,7 @@ def main():
     L.append('inst_engine:\tdc.b\t%s' % ','.join(str(b if b < 128 else b - 256) for b in ew))
     L.append('snd_null:\tdc.w\t0,0')
     L.append('\tsection\tgfx,data')
-    L.append('cars_gfx:\tincbin\t"cars.bin"\nwbob_gfx:\tincbin\t"wbob.bin"')
+    L.append('cars_gfx:\tincbin\t"cars.bin"\nwbob_gfx:\tincbin\t"wbob.bin"\nwbob_retro:\tincbin\t"wbobretro.bin"')
     L.append('icons_gfx:\tincbin\t"icons.bin"\nicons_mask:\tincbin\t"iconmask.bin"\nicons_retro:\tincbin\t"iconretro.bin"')
     L.append('hud_lz:\tincbin\t"hud.lz"\n\teven\ntitle_lz:\tincbin\t"title.lz"\n\teven\nmenu_lz:\tincbin\t"menu.lz"\n\teven')
     L.append('font8:\tincbin\t"font8.bin"')

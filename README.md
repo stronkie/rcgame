@@ -104,6 +104,7 @@ Source: `src/main.s` (the full game) and `src/demo.s` (the demo) include `src/rc
 
 ### V0.5.1 - TEST VERSION - 21 November 2026
 - The title screen stays put: the logo wobble on the beat no longer shifts the menu below it, and the wobble is gentler
+- STRONKIE POCKET: missiles, bombs and explosions are grey with black outlines now, easy to see on the LCD
 
 ### V0.5 - TEST VERSION - 21 November 2026
 - The game is now called **Stronkie's RC Cup**: new title logo, loading picture, menus, manual, box and labels

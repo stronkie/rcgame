@@ -2466,7 +2466,10 @@ bobs_draw:
 	add.w	#10,d0
 .wf	mulu	#192,d0
 	lea	wbob_gfx,a0
-	add.l	d0,a0
+	tst.b	r_retro			; (the handheld: grey ones)
+	beq.s	.wg
+	lea	wbob_retro,a0
+.wg	add.l	d0,a0
 	move.l	W_X(a3),d0		; top left in the track picture
 	sub.l	W_Y(a3),d0
 	asr.l	#8,d0
