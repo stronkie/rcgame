@@ -104,6 +104,11 @@ TE_SIZE		equ	42
 ;------------------------------------------------------------------------------
 race_setup:
 	movem.l	d0-d7/a0-a6,-(sp)
+	move.w	#-1,ovl_built
+	clr.b	ovl_drawn
+	moveq	#OVL_LIGHT0,d0		; the start lights, all off
+	moveq	#0,d1
+	bsr	show_ovl
 	move.w	cur_track,d0
 	mulu	#TE_SIZE,d0
 	lea	track_table,a0
@@ -208,7 +213,10 @@ car_stats:
 	move.b	r_motor,d2
 	mulu	#44,d2
 	add.w	d2,d1
-	move.w	d1,C_TOP(a2)
+	cmp.b	#6,r_paint		; the golden car: a little faster
+	bne.s	.ng
+	add.w	#30,d1
+.ng	move.w	d1,C_TOP(a2)
 	moveq	#0,d1
 	move.b	r_battery,d1
 	mulu	#3,d1
@@ -411,6 +419,7 @@ st_race:
 	rts
 
 do_step:
+	bsr	ovl_restore
 	addq.l	#1,race_step
 	move.w	race_phase,d0
 	beq	countdown
@@ -454,19 +463,28 @@ countdown:
 	beq.s	.go
 	bsr	engine_sound
 	bra	hud_update
-.three	moveq	#S_V_THREE,d0
+.three	moveq	#OVL_LIGHT1,d0
+	moveq	#S_V_THREE,d2
 	lea	str_3,a0
 	bra.s	.say
-.two	moveq	#S_V_TWO,d0
+.two	moveq	#OVL_LIGHT2,d0
+	moveq	#S_V_TWO,d2
 	lea	str_2,a0
 	bra.s	.say
-.one	moveq	#S_V_ONE,d0
+.one	moveq	#OVL_LIGHT3,d0
+	moveq	#S_V_ONE,d2
 	lea	str_1,a0
-.say	bsr	sfx
+.say	moveq	#0,d1
+	bsr	show_ovl
+	move.w	d2,d0
+	bsr	sfx
 	moveq	#30,d0
 	bsr	hud_msg
 	bra	hud_update
-.go	moveq	#S_V_GO,d0
+.go	moveq	#OVL_LIGHTGO,d0
+	moveq	#30,d1
+	bsr	show_ovl
+	moveq	#S_V_GO,d0
 	bsr	sfx
 	lea	str_go,a0
 	moveq	#30,d0
@@ -1499,8 +1517,9 @@ car_progress:
 
 ; lap_done: car a2 crossed the line after a full lap
 lap_done:
-	movem.l	d0/a0,-(sp)
+	movem.l	d0-d1/a0,-(sp)
 	move.w	C_LAPT(a2),d0
+	move.w	d0,lap_last
 	cmp.w	C_BEST(a2),d0
 	bhs.s	.nb
 	move.w	d0,C_BEST(a2)
@@ -1514,6 +1533,9 @@ lap_done:
 	bpl.s	.x
 	move.w	#2,race_phase		; you finished
 	clr.w	ending_t
+	moveq	#OVL_FINISH,d0
+	moveq	#0,d1
+	bsr	show_ovl
 	moveq	#S_V_FINISH,d0
 	bsr	sfx
 	lea	str_finish,a0
@@ -1524,13 +1546,28 @@ lap_done:
 	bpl.s	.x
 	moveq	#S_BEEP,d0
 	bsr	sfx
+	; the big text: LAP 2, LAP 3, FINAL LAP! (or NEW RECORD!)
+	move.w	C_LAP(a2),d0
+	add.w	#OVL_LAP2-1,d0
+	move.w	cur_track,d1		; faster than the best lap ever here?
+	add.w	d1,d1
+	lea	r_best,a0
+	add.w	d1,a0
+	tst.w	(a0)
+	beq.s	.nr
+	move.w	lap_last,d1
+	cmp.w	(a0),d1
+	bhs.s	.nr
+	moveq	#OVL_RECORD,d0
+.nr	moveq	#40,d1
+	bsr	show_ovl
 	lea	str_lap,a0
 	cmp.w	#LAPS-1,C_LAP(a2)
 	bne.s	.m
 	lea	str_lastlap,a0
 .m	moveq	#40,d0
 	bsr	hud_msg
-.x	movem.l	(sp)+,d0/a0
+.x	movem.l	(sp)+,d0-d1/a0
 	rts
 
 ; rank_cars: C_RANK 1..4 by progress
@@ -2294,6 +2331,7 @@ race_draw:
 	cmp.w	#4,d7
 	blo	.car
 	bsr	bobs_draw
+	bsr	ovl_draw
 	movem.l	(sp)+,d0-d7/a0-a3
 	rts
 
@@ -2414,6 +2452,197 @@ bobs_draw:
 	cmp.w	#4,d7
 	blo	.w
 	movem.l	(sp)+,d0-d7/a0-a4
+	rts
+
+
+;------------------------------------------------------------------------------
+; overlays: the start lights and the big texts, a blitter bob over the track
+; (one at a time, centred on the screen, put back at the start of each step)
+;------------------------------------------------------------------------------
+OVL_MAXW	equ	12			; words
+OVL_MAXH	equ	40
+
+; show_ovl: d0 = OVL_*, d1 = steps to show (0 = until the next one)
+show_ovl:
+	move.w	d0,ovl_cur
+	move.w	d1,ovl_t
+	rts
+
+hide_ovl:
+	move.w	#-1,ovl_cur
+	rts
+
+ovl_restore:
+	tst.b	ovl_drawn
+	beq.s	.x
+	movem.l	a5,-(sp)
+	clr.b	ovl_drawn
+	bsr	wait_blit
+	lea	CUSTOM,a5
+	move.l	#$09f00000,$40(a5)
+	move.l	#-1,$44(a5)
+	move.l	#ovl_save,$50(a5)
+	move.l	ovl_dst,$54(a5)
+	clr.w	$64(a5)
+	move.w	ovl_dmod,$66(a5)
+	move.w	ovl_size,$58(a5)
+	bsr	wait_blit
+	movem.l	(sp)+,a5
+.x	rts
+
+ovl_draw:
+	movem.l	d0-d2/a5,-(sp)
+	move.w	ovl_cur,d0
+	bmi	.x
+	cmp.w	ovl_built,d0
+	beq.s	.b
+	bsr	ovl_build
+.b	move.w	ovl_w,d0		; x: centred
+	lsl.w	#3,d0
+	neg.w	d0
+	add.w	cam_x,d0
+	add.w	#160,d0
+	move.w	ovl_y,d1
+	add.w	cam_y,d1
+	mulu	#TRK_RB,d1
+	move.w	d0,d2
+	lsr.w	#4,d2
+	add.w	d2,d2
+	add.l	d2,d1
+	add.l	#trackbm,d1
+	move.l	d1,ovl_dst
+	and.w	#15,d0
+	ror.w	#4,d0			; the shift, in bits 12-15
+	move.w	ovl_w,d1
+	addq.w	#1,d1
+	move.w	#TRK_PB,d2
+	sub.w	d1,d2
+	sub.w	d1,d2
+	move.w	d2,ovl_dmod
+	move.w	ovl_h,d2
+	mulu	#5*64,d2
+	or.w	d1,d2
+	move.w	d2,ovl_size
+	bsr	wait_blit
+	lea	CUSTOM,a5
+	; save what is under it
+	move.l	#$09f00000,$40(a5)
+	move.l	#-1,$44(a5)
+	move.l	ovl_dst,$50(a5)
+	move.l	#ovl_save,$54(a5)
+	move.w	ovl_dmod,$64(a5)
+	clr.w	$66(a5)
+	move.w	ovl_size,$58(a5)
+	bsr	wait_blit
+	; cookie cut: D = A.B + /A.C
+	move.w	d0,d1
+	or.w	#$0fca,d1
+	move.w	d1,$40(a5)
+	move.w	d0,$42(a5)
+	move.l	#$ffff0000,$44(a5)
+	move.l	ovl_dst,$48(a5)
+	move.l	#ovl_img,$4c(a5)
+	move.l	#ovl_msk,$50(a5)
+	move.l	ovl_dst,$54(a5)
+	move.w	ovl_dmod,$60(a5)
+	move.w	#-2,$62(a5)
+	move.w	#-2,$64(a5)
+	move.w	ovl_dmod,$66(a5)
+	move.w	ovl_size,$58(a5)
+	st	ovl_drawn
+	; the time it stays
+	tst.w	ovl_t
+	beq.s	.x
+	subq.w	#1,ovl_t
+	bne.s	.x
+	move.w	#-1,ovl_cur
+.x	movem.l	(sp)+,d0-d2/a5
+	rts
+
+; ovl_build: d0 = OVL_* -> ovl_img / ovl_msk (interleaved rows, 5 planes)
+; the image has 2 bits a pixel: a (bit 0) and b (bit 1); 1, 2, 3 = its 3 colours
+ovl_build:
+	movem.l	d0-d7/a0-a5,-(sp)
+	bsr	wait_blit
+	move.w	d0,ovl_built
+	add.w	d0,d0
+	add.w	d0,d0
+	lea	ovl_table,a0
+	move.l	(a0,d0.w),a0
+	move.w	(a0)+,d5		; width in words
+	move.w	d5,ovl_w
+	add.w	d5,d5			; ... in bytes
+	move.w	(a0)+,d7		; height
+	move.w	d7,ovl_h
+	move.w	(a0)+,ovl_y
+	move.w	(a0)+,d2		; the 3 colours
+	move.w	(a0)+,d3
+	move.w	(a0)+,d4
+	lea	ovl_img,a1
+	lea	ovl_msk,a2
+	subq.w	#1,d7
+.row	moveq	#0,d1			; plane
+.pl	moveq	#0,d0			; which of the colours have this plane: 0..7
+	btst	d1,d2
+	beq.s	.s1
+	addq.w	#1,d0
+.s1	btst	d1,d3
+	beq.s	.s2
+	addq.w	#2,d0
+.s2	btst	d1,d4
+	beq.s	.s3
+	addq.w	#4,d0
+.s3	add.w	d0,d0
+	add.w	d0,d0
+	lea	.ops(pc),a5
+	move.l	(a5,d0.w),a5
+	move.l	a0,a3
+	move.w	d5,d6
+	lsr.w	#1,d6
+	subq.w	#1,d6
+	move.w	d7,-(sp)
+	move.w	d1,-(sp)
+.wd	move.w	(a3)+,d0		; a
+	move.w	-2(a3,d5.w),d1		; b
+	move.w	d0,d7
+	or.w	d1,d7
+	move.w	d7,(a2)+		; the mask
+	jsr	(a5)
+	move.w	d7,(a1)+
+	dbf	d6,.wd
+	move.w	(sp)+,d1
+	move.w	(sp)+,d7
+	addq.w	#1,d1
+	cmp.w	#5,d1
+	blo.s	.pl
+	add.w	d5,a0
+	add.w	d5,a0
+	dbf	d7,.row
+	movem.l	(sp)+,d0-d7/a0-a5
+	rts
+.ops	dc.l	.o0,.o1,.o2,.o3,.o4,.o5,.o6,.o7
+.o0	moveq	#0,d7
+	rts
+.o1	move.w	d1,d7			; a and not b
+	not.w	d7
+	and.w	d0,d7
+	rts
+.o2	move.w	d0,d7			; b and not a
+	not.w	d7
+	and.w	d1,d7
+	rts
+.o3	move.w	d0,d7
+	eor.w	d1,d7
+	rts
+.o4	move.w	d0,d7
+	and.w	d1,d7
+	rts
+.o5	move.w	d0,d7
+	rts
+.o6	move.w	d1,d7
+	rts
+.o7	move.w	d0,d7
+	or.w	d1,d7
 	rts
 
 clamp_cam:

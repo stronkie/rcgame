@@ -73,6 +73,19 @@ race_cols	ds.w	16
 race_shared	ds.w	16
 race_weather	ds.b	1	; 0 dry, 1 rain, 2 wind
 race_reverse	ds.b	1	; the track the other way round
+unlock_new	ds.b	1
+ovl_drawn	ds.b	1
+	even
+ovl_cur		ds.w	1
+ovl_t		ds.w	1
+ovl_built	ds.w	1
+ovl_w		ds.w	1
+ovl_h		ds.w	1
+ovl_y		ds.w	1
+ovl_dmod	ds.w	1
+ovl_size	ds.w	1
+ovl_dst		ds.l	1
+lap_last	ds.w	1	; just unlocked (bits as r_unlock)
 practice	ds.b	1
 paused		ds.b	1
 race_quit	ds.b	1

@@ -1120,9 +1120,17 @@ st_shop:
 	bne.s	.np
 	move.b	r_paint,d0
 	addq.b	#1,d0
+	cmp.b	#6,d0
+	bhs.s	.gold
 	cmp.b	r_class,d0
 	bls.s	.p
-	moveq	#0,d0
+.gold	cmp.b	#6,d0			; after the unlocked paints: the golden car
+	bhi.s	.p0
+	btst	#1,r_unlock
+	beq.s	.p0
+	moveq	#6,d0
+	bra.s	.p
+.p0	moveq	#0,d0
 .p	move.b	d0,r_paint
 	moveq	#S_CLICK,d0
 	bsr	sfx
@@ -1194,7 +1202,24 @@ st_cupend_in:
 	cmp.w	#3,d6
 	bhi.s	.nt
 	move.b	d6,(a0,d0.w)
-.nt	; the table: you and the four drivers
+.nt	clr.b	unlock_new
+	cmp.w	#1,d6			; gold: the secret track, all three: the golden car
+	bne.s	.ng
+	btst	#0,r_unlock
+	bne.s	.g1
+	bset	#0,r_unlock
+	bset	#0,unlock_new
+.g1	cmp.b	#1,r_trophy
+	bne.s	.ng
+	cmp.b	#1,r_trophy+1
+	bne.s	.ng
+	cmp.b	#1,r_trophy+2
+	bne.s	.ng
+	btst	#1,r_unlock
+	bne.s	.ng
+	bset	#1,r_unlock
+	bset	#1,unlock_new
+.ng	; the table: you and the four drivers
 	moveq	#0,d7
 .t	move.w	d7,d1
 	mulu	#12,d1
@@ -1243,7 +1268,19 @@ st_cupend_in:
 	move.w	#170,d1
 	moveq	#M_WHITE,d2
 	bsr	mctext
-	lea	str_fire,a0
+	btst	#0,unlock_new
+	beq.s	.u1
+	lea	str_unl_track,a0
+	move.w	#192,d1
+	moveq	#M_ORANGE,d2
+	bsr	mctext
+.u1	btst	#1,unlock_new
+	beq.s	.u2
+	lea	str_unl_car,a0
+	move.w	#206,d1
+	moveq	#M_ORANGE,d2
+	bsr	mctext
+.u2	lea	str_fire,a0
 	move.w	#240,d1
 	moveq	#M_LBLUE,d2
 	bsr	mctext
@@ -1566,6 +1603,8 @@ howto_text
 str_race	dc.b	' - RACE ',0
 str_of8		dc.b	' OF 9',0
 str_reverse	dc.b	' - BACKWARDS!',0
+str_unl_track	dc.b	'SECRET TRACK UNLOCKED! (PRACTICE)',0
+str_unl_car	dc.b	'THE GOLDEN CAR IS UNLOCKED! (SHOP)',0
 str_track	dc.b	'TRACK ',0
 str_weather	dc.b	'WEATHER: ',0
 str_bestlap	dc.b	'BEST LAP: ',0

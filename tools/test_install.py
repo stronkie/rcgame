@@ -116,12 +116,12 @@ def main():
     shutil.rmtree(T, ignore_errors=True)
     disk = os.path.join(T, 'disk'); os.makedirs(disk)
     for d in ('dh0', 'work', 'work/Games'): os.makedirs(os.path.join(T, d))
-    files = adf_files(os.path.join(B, 'RCTurboCup_V' + os.environ.get('VER', '0.2') + '.adf'))
+    files = adf_files(os.path.join(B, 'RCTurboCup_V' + os.environ.get('VER', '0.4') + '.adf'))
     print('on the disk:', sorted(files))
     for n, d in files.items(): open(os.path.join(disk, n), 'wb').write(d)
     os.makedirs(os.path.join(disk, 'Tracks'))
-    for i in range(1, 9): shutil.copy(os.path.join(B, 'gen', 'Track%d' % i), os.path.join(disk, 'Tracks'))
-    open(os.path.join(disk, 'RCTurbo.dat'), 'wb').write(b'RCT1' + bytes(124))
+    for i in range(1, 11): shutil.copy(os.path.join(B, 'gen', 'Track%d' % i), os.path.join(disk, 'Tracks'))
+    open(os.path.join(disk, 'RCTurbo.dat'), 'wb').write(b'RCT2' + bytes(124))
     ok = True
     def check(n, c):
         nonlocal ok; ok &= bool(c); print(('PASS ' if c else 'FAIL ') + n)
@@ -131,7 +131,7 @@ def main():
     check('WB: drawer made on DH0:', os.path.isdir(dest))
     for f in ['RCTurbo', 'RCTurbo.game', 'RCTurbo.info', 'ReadMe.txt', 'RCTurbo.dat']:
         check('WB: ' + f + ' copied', os.path.exists(os.path.join(dest, f)) and same(os.path.join(dest, f), os.path.join(disk, f)))
-    for i in range(1, 9):
+    for i in range(1, 11):
         check('WB: Tracks/Track%d copied' % i, same(os.path.join(dest, 'Tracks', 'Track%d' % i), os.path.join(disk, 'Tracks', 'Track%d' % i)))
     check('WB: drawer icon', open(os.path.join(T, 'dh0', 'RCTurboCup.info'), 'rb').read()[:2] == b'\xe3\x10')
     check('WB: Done message', 'Done!' in am.out)

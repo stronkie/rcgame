@@ -1269,3 +1269,6 @@ trackbm		ds.b	TRK_SIZE		; the track picture (and the menu screen)
 screen		equ	trackbm
 hudbm		ds.b	HUD_SIZE+16
 sprbufs		ds.b	SPRBUF*8
+ovl_img		ds.w	OVL_MAXW*5*OVL_MAXH
+ovl_msk		ds.w	OVL_MAXW*5*OVL_MAXH
+ovl_save	ds.w	(OVL_MAXW+1)*5*OVL_MAXH
