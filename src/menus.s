@@ -10,6 +10,10 @@ game_init:
 	st	music_on
 	move.w	#-1,cur_song
 	move.w	#-1,loaded_track
+	lea	ovl_lz,a0		; the overlay pictures
+	lea	ovl_buf,a1
+	move.l	#OVL_RAW,d0
+	bsr	unlz
 	bsr	init_display
 	lea	st_title_in,a0
 	bra	set_state

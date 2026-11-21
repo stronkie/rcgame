@@ -927,7 +927,8 @@ rand_n:					; d0.w = n -> d0.l = 0..n-1
 	rts
 
 ;==============================================================================
-;  sound: music on channels 0 (lead) and 1 (bass), the motor on 2, effects on 3
+;  sound: music on channels 0 (lead) and 1 (bass), 2 arpeggios (menus) or the motor (races),
+;  3 the drums and the effects (an effect always wins)
 ;==============================================================================
 music_init:
 	movem.l	d0/a5,-(sp)
@@ -947,46 +948,71 @@ music_init:
 	move.w	#$8207,$96(a5)		; the instruments loop for ever
 	clr.l	mus_ptr
 	clr.l	mus_ptr+4
+	clr.l	mus_ptr+8
+	clr.l	mus_ptr+12
 	clr.w	eng_vol
+	move.w	#-1,sfx_next
 	movem.l	(sp)+,d0/a5
 	rts
 
 ; play_song: d0 = song number (SONG_x), d1 = volume
 play_song:
-	movem.l	d0-d1/a0-a1,-(sp)
+	movem.l	d0-d1/a0-a1/a5,-(sp)
 	cmp.w	cur_song,d0
 	bne.s	.new
 	tst.l	mus_ptr
-	bne.s	.x
+	bne	.x
 .new	move.w	d0,cur_song
-	lsl.w	#3,d0
+	lsl.w	#4,d0
 	lea	song_table,a0
-	move.l	(a0,d0.w),a1
-	move.l	4(a0,d0.w),a0
-	exg	a0,a1
+	add.w	d0,a0
 	move.w	#$4000,CUSTOM+$9a
 	move.w	d1,mus_max
 	move.w	d1,d0
 	lsr.w	#2,d0
 	move.w	d0,mus_floor
-	move.l	a0,mus_ptr
-	move.l	a1,mus_ptr+4
-	move.l	a0,mus_start
-	move.l	a1,mus_start+4
-	move.w	#1,mus_left
-	move.w	#1,mus_left+2
+	lea	mus_ptr,a1
+	move.l	(a0),(a1)+		; lead, bass, arpeggios, drums (0 = none)
+	move.l	4(a0),(a1)+
+	move.l	8(a0),(a1)+
+	move.l	12(a0),(a1)+
+	lea	mus_start,a1
+	move.l	(a0)+,(a1)+
+	move.l	(a0)+,(a1)+
+	move.l	(a0)+,(a1)+
+	move.l	(a0)+,(a1)+
+	move.l	#$00010001,mus_left
+	move.l	#$00010001,mus_left+4
+	; channel 2: the arpeggios (menus) or your motor (races)
+	lea	CUSTOM,a5
+	tst.l	mus_ptr+8
+	beq.s	.eng
+	clr.w	eng_vol
+	move.l	#inst_harm,$c0(a5)
+	bra.s	.c2
+.eng	clr.w	$c8(a5)
+	move.l	#inst_engine,$c0(a5)
+.c2	move.w	#16,$c4(a5)
 	move.w	#$c000,CUSTOM+$9a
-.x	movem.l	(sp)+,d0-d1/a0-a1
+.x	movem.l	(sp)+,d0-d1/a0-a1/a5
 	rts
 
 song_stop:
 	clr.l	mus_ptr
 	clr.l	mus_ptr+4
+	clr.l	mus_ptr+8
+	clr.l	mus_ptr+12
 	move.w	#-1,cur_song
 	clr.w	CUSTOM+$a8
 	clr.w	CUSTOM+$b8
 	clr.w	eng_vol
 	clr.w	CUSTOM+$c8
+	move.l	#inst_engine,CUSTOM+$c0	; channel 2: back to the motor
+	move.w	#16,CUSTOM+$c4
+	rts
+
+sfx_after:				; d0 = sound number: when this effect is done
+	move.w	d0,sfx_next
 	rts
 
 sfx:					; d0 = sound number
@@ -995,6 +1021,12 @@ sfx:					; d0 = sound number
 	lsl.w	#3,d0
 	add.w	d0,a0
 	move.l	a0,sfx_reqp
+	move.w	#64,sfx_vol
+	move.w	4(a0),d0		; how long it plays (frames): length * period / 35469
+	mulu	6(a0),d0
+	divu	#35469,d0
+	addq.w	#2,d0
+	move.w	d0,sfx_busy
 	move.b	#1,sfx_st
 	movem.l	(sp)+,d0/a0
 	rts
@@ -1012,7 +1044,7 @@ sound_tick:
 	move.l	(a1)+,$30(a5)
 	move.w	(a1)+,$34(a5)
 	move.w	(a1)+,$36(a5)
-	move.w	#64,$38(a5)
+	move.w	sfx_vol,$38(a5)
 	move.b	#2,sfx_st
 	bra.s	.pn
 .p2	cmp.b	#2,d2
@@ -1023,10 +1055,20 @@ sound_tick:
 .p3	move.l	#snd_null,$30(a5)	; 3: after the sample, loop silence
 	move.w	#2,$34(a5)
 	clr.b	sfx_st
-.pn	; the motor on channel 2
+.pn	tst.w	sfx_busy
+	beq.s	.nb
+	subq.w	#1,sfx_busy
+	bne.s	.nb
+	move.w	sfx_next,d0		; the next effect in the queue
+	bmi.s	.nb
+	move.w	#-1,sfx_next
+	bsr	sfx
+.nb	; the motor on channel 2 (unless the arpeggios have it)
+	tst.l	mus_ptr+8
+	bne.s	.ne
 	move.w	eng_per,$26(a5)
 	move.w	eng_vol,$28(a5)
-	; the music channels
+.ne	; the music channels
 	moveq	#0,d1
 .ch	move.w	d1,d0
 	lsl.w	#2,d0
@@ -1048,11 +1090,15 @@ sound_tick:
 	bra.s	.note
 .end	lea	mus_ptr,a0
 	clr.l	(a0,d0.w)
+	cmp.w	#3,d1
+	beq	.next
 	move.w	d1,d0
 	lsl.w	#4,d0
 	clr.w	8(a5,d0.w)
-	bra.s	.next
+	bra	.next
 .play	move.w	(a1)+,d3
+	cmp.w	#3,d1
+	beq	.drum
 	lea	mus_ptr,a0
 	move.l	a1,(a0,d0.w)
 	move.w	d1,d0
@@ -1069,7 +1115,9 @@ sound_tick:
 	lsl.w	#4,d3
 	move.w	d2,6(a5,d3.w)
 	bra.s	.setv
-.decay	lea	mus_vol,a0
+.decay	cmp.w	#3,d1
+	beq	.next
+	lea	mus_vol,a0
 	move.w	mus_floor,d2
 	cmp.w	(a0,d3.w),d2
 	bhs.s	.setv0
@@ -1082,13 +1130,44 @@ sound_tick:
 	tst.b	music_on
 	bne.s	.on
 	moveq	#0,d2
-.on	lsl.w	#3,d3
+.on	cmp.w	#4,d3			; (channel 2: the arpeggios a bit softer)
+	bne.s	.v2
+	mulu	#3,d2
+	lsr.w	#2,d2
+.v2	lsl.w	#3,d3
 	move.w	d2,8(a5,d3.w)
 .next	addq.w	#1,d1
-	cmp.w	#2,d1
+	cmp.w	#4,d1
 	blo	.ch
 	movem.l	(sp)+,d0-d3/a0-a1/a5
 	rts
+.drum	lea	mus_ptr,a0		; a drum: on channel 3 when no effect is playing
+	move.l	a1,(a0,d0.w)
+	lea	mus_left,a0
+	move.w	d1,d0
+	add.w	d0,d0
+	move.w	d3,(a0,d0.w)
+	tst.w	d2
+	beq.s	.next
+	tst.b	music_on
+	beq.s	.next
+	tst.w	sfx_busy
+	bne.s	.next
+	tst.b	sfx_st
+	bne.s	.next
+	add.w	#S_KICK-1,d2
+	lsl.w	#3,d2
+	lea	snd_table,a0
+	add.w	d2,a0
+	move.l	a0,sfx_reqp
+	move.w	mus_max,d2
+	add.w	d2,d2
+	cmp.w	#64,d2
+	bls.s	.dv
+	moveq	#64,d2
+.dv	move.w	d2,sfx_vol
+	move.b	#1,sfx_st
+	bra.s	.next
 
 ;==============================================================================
 ;  the main loop
@@ -1227,15 +1306,18 @@ state		ds.l	1
 cur_cop		ds.l	1
 txt_base	ds.l	1
 sfx_reqp	ds.l	1
-mus_ptr		ds.l	2
-mus_start	ds.l	2
+mus_ptr		ds.l	4
+mus_start	ds.l	4
 txt_rb		ds.w	1
 txt_pb		ds.w	1
 old_intena	ds.w	1
 old_dmacon	ds.w	1
 old_adkcon	ds.w	1
-mus_left	ds.w	2
-mus_vol		ds.w	2
+mus_left	ds.w	4
+mus_vol		ds.w	4
+sfx_vol		ds.w	1
+sfx_busy	ds.w	1
+sfx_next	ds.w	1
 mus_max		ds.w	1
 mus_floor	ds.w	1
 cur_song	ds.w	1

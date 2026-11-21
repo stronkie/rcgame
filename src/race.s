@@ -1530,7 +1530,7 @@ lap_done:
 	addq.w	#1,fin_count
 	move.w	fin_count,C_FIN(a2)
 	tst.w	C_PERS(a2)
-	bpl.s	.x
+	bpl	.x
 	move.w	#2,race_phase		; you finished
 	clr.w	ending_t
 	moveq	#OVL_FINISH,d0
@@ -1538,6 +1538,8 @@ lap_done:
 	bsr	show_ovl
 	moveq	#S_V_FINISH,d0
 	bsr	sfx
+	moveq	#S_CHEER,d0		; and the crowd goes wild
+	bsr	sfx_after
 	lea	str_finish,a0
 	moveq	#100,d0
 	bsr	hud_msg
@@ -2232,12 +2234,16 @@ engine_sound:
 .p	cmp.w	#2,race_phase
 	bne.s	.r
 	lsr.w	#1,d0
-.r	move.w	#640,d1
+.r	moveq	#0,d1			; a stronger motor sings higher
+	move.b	r_motor,d1
+	mulu	#22,d1
+	neg.w	d1
+	add.w	#640,d1
 	lsr.w	#1,d0
 	sub.w	d0,d1
-	cmp.w	#180,d1
+	cmp.w	#150,d1
 	bge.s	.ok
-	move.w	#180,d1
+	move.w	#150,d1
 .ok	move.w	d1,eng_per
 	move.w	cars+C_SPD,d0
 	bpl.s	.q
@@ -2568,7 +2574,9 @@ ovl_build:
 	add.w	d0,d0
 	add.w	d0,d0
 	lea	ovl_table,a0
-	move.l	(a0,d0.w),a0
+	move.l	(a0,d0.w),d0
+	lea	ovl_buf,a0
+	add.l	d0,a0
 	move.w	(a0)+,d5		; width in words
 	move.w	d5,ovl_w
 	add.w	d5,d5			; ... in bytes

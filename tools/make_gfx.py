@@ -242,18 +242,18 @@ def overlays():
     for k in range(4): imgs.append((ovl_lights(k), (16, 21, 24), 16))
     imgs.append((ovl_lights(3, True), (16, 21, 28), 16))
     for t, c2, c3 in OVL_TEXTS: imgs.append((ovl_text(t), (16, c2, c3), 64))
-    L = ['ovl_table:']
-    for i in range(len(imgs)): L.append('\tdc.l\tovl%d' % i)
+    blob = bytearray(); offs = []
     for i, (a, cols, y) in enumerate(imgs):
         h, w = a.shape
         ww = (w + 15) // 16
         b = np.zeros((h, ww * 16), np.uint8); b[:, :w] = a
-        L.append('ovl%d:\tdc.w\t%d,%d,%d,%d,%d,%d' % (i, ww, h, y, cols[0], cols[1], cols[2]))
-        data = bytearray()
+        offs.append(len(blob))
+        blob += struct.pack('>6H', ww, h, y, cols[0], cols[1], cols[2])
         for row in b:
-            data += np.packbits(row & 1).tobytes() + np.packbits(row >> 1 & 1).tobytes()
-        for k in range(0, len(data), 32):
-            L.append('\tdc.b\t' + ','.join(str(v) for v in data[k:k + 32]))
+            blob += np.packbits(row & 1).tobytes() + np.packbits(row >> 1 & 1).tobytes()
+    open(os.path.join(OUT, 'ovl.lz'), 'wb').write(lz.pack(bytes(blob)))
+    L = ['OVL_RAW\tequ\t%d' % len(blob), 'ovl_table:\tdc.l\t' + ','.join(str(o) for o in offs),
+         'ovl_lz:\tincbin\t"ovl.lz"']
     eq = '\n'.join('%s\t\tequ\t%d' % (n, i) for i, n in enumerate(OVL_NAMES))
     prev = Image.new('P', (240, sum(a.shape[0] + 4 for a, c, y in imgs)), 0)
     y0 = 0
@@ -493,7 +493,7 @@ def tables():
 # ------------------------------------------------------------------ sound
 RATE = 11025
 SND = ['beep', 'go', 'v_three', 'v_two', 'v_one', 'v_go', 'bonk', 'skid', 'launch', 'boom', 'pickup', 'zip', 'cash', 'letter',
-       'splash', 'boing', 'zap', 'cheer', 'buy', 'error', 'v_title', 'v_finish', 'drop', 'click']
+       'splash', 'boing', 'zap', 'cheer', 'buy', 'error', 'v_title', 'v_finish', 'drop', 'click', 'kick', 'snare', 'hat']
 
 def tosamp(x):
     x = np.clip(x, -1, 1)
@@ -552,9 +552,27 @@ def sounds():
     S['boing'] = np.sin(2 * np.pi * np.cumsum(220 + 500 * np.sin(np.pi * t / 0.3) ** 2) / RATE) * env(n, 0.005, 0.2)
     n = int(RATE * 0.35); t = np.arange(n) / RATE
     S['zap'] = np.sign(np.sin(2 * np.pi * 70 * t)) * rnd.uniform(0.4, 1, n) * env(n, 0.002, 0.15) * 0.8
-    n = int(RATE * 0.9); t = np.arange(n) / RATE
-    cr = rnd.uniform(-1, 1, n)
-    S['cheer'] = (lowpass(cr, 0.35) - lowpass(cr, 0.05)) * 2.2 * np.minimum(1, t / 0.2) * np.exp(-t / 0.5) * (0.8 + 0.2 * np.sin(2 * np.pi * 7 * t))
+    # a crowd: bands of noise that swell, with whistles and claps
+    R8 = 8000
+    n = int(R8 * 1.2); t = np.arange(n) / R8
+    cr = np.zeros(n)
+    for k in range(4):
+        b = rnd.uniform(-1, 1, n)
+        cr += (lowpass(b, 0.25 + 0.1 * k) - lowpass(b, 0.04)) * (0.8 + 0.2 * np.sin(2 * np.pi * (3 + k * 1.7) * t + k))
+    for c in rnd.uniform(0, 1.0, 30):
+        i = int(c * R8); m = min(n - i, 150)
+        cr[i:i + m] += rnd.uniform(-1, 1, m) * np.exp(-np.arange(m) / 30) * 1.5
+    wt = (t > 0.2) & (t < 0.8)
+    cr += np.where(wt, np.sin(2 * np.pi * np.cumsum(1800 + 500 * np.sin(np.pi * (t - 0.2) / 0.6)) / R8) * 0.25, 0)
+    S['cheer'] = cr * 0.75 * np.minimum(1, t / 0.15) * np.minimum(1, (t[-1] - t) / 0.5)
+    n = int(RATE * 0.16); t = np.arange(n) / RATE
+    S['kick'] = np.sin(2 * np.pi * np.cumsum(45 + 110 * np.exp(-t / 0.03)) / RATE) * np.exp(-t / 0.08) * 1.1
+    n = int(RATE * 0.13); t = np.arange(n) / RATE
+    sn = rnd.uniform(-1, 1, n)
+    S['snare'] = ((sn - lowpass(sn, 0.1)) * 0.9 * np.exp(-t / 0.05) + np.sin(2 * np.pi * 190 * t) * 0.5 * np.exp(-t / 0.03))
+    n = int(RATE * 0.04); t = np.arange(n) / RATE
+    hh = rnd.uniform(-1, 1, n)
+    S['hat'] = (hh - lowpass(hh, 0.5)) * 1.2 * np.exp(-t / 0.012)
     S['buy'] = np.concatenate([tone(784, 0.06, 'sq', 1), tone(1568, 0.15, 'sq', 0.1)]) * 0.5
     S['error'] = np.concatenate([tone(150, 0.1, 'sq', 1), tone(110, 0.15, 'sq', 1)]) * 0.45
     n = int(RATE * 0.12); t = np.arange(n) / RATE
@@ -630,21 +648,67 @@ SONGS = {
 }
 SONG_ORDER = list(SONGS.keys())
 
+# the 3rd channel (menus only: in a race channel 2 is your motor) - arpeggios on the chords
+CH = {'C': (0, 4, 7), 'Am': (9, 12, 16), 'G': (7, 11, 14), 'F': (5, 9, 12), 'E': (4, 8, 11), 'Dm': (2, 5, 9)}
+NAMES12 = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+def arp(chords, beats, tick):
+    out = []
+    for c in chords:
+        r, t, f = CH[c]
+        for k in range(beats):
+            n = (r, t, f, t)[k % 4] + 48
+            out.append((period(NAMES12[n % 12] + str(n // 12)), 2 * tick))
+    return out
+HARM = {'title': arp(['Am', 'G', 'F', 'E'], 8, 5),
+        'shop': arp(['C', 'Am', 'F', 'G', 'C', 'Am', 'G', 'C'], 4, 6)}
+
+# drums on channel 3 (an effect always wins over a drum)
+DRUM_PAT = {
+    'title': ['K.H.S.H.K.H.S.HH', 'K.H.S.H.K.H.S.HH', 'K.H.S.H.K.H.S.HH', 'K.H.S.HSK.SSS.SS'],
+    'race':  ['K.H.S.H.K.KHS.H.', 'K.H.S.H.K.KHS.HH', 'K.H.S.H.K.KHS.H.', 'K.H.S.HSK.S.SSSS'],
+    'shop':  ['K..HS..HK.KHS..H', 'K..HS..HK.KHS.SS'],
+    'win':   ['K.S.K.S.KKSSSSSS', 'K'],
+}
+DRUM_ID = {'K': 1, 'S': 2, 'H': 3}
+def drums(name, total):
+    pat = DRUM_PAT.get('race' if name.startswith('race') else name)
+    if not pat: return None
+    tick = 6 if name == 'shop' else 5
+    steps = []
+    nsteps = total // tick
+    loop = SONGS[name][2]
+    bars = [pat[i % len(pat)] for i in range((nsteps + 15) // 16)] if loop else pat
+    for b in bars:
+        for ch in b: steps.append(ch)
+    if loop: steps = steps[:nsteps]
+    out = []
+    for ch in steps:
+        if ch in DRUM_ID or not out: out.append([DRUM_ID.get(ch, 0), tick])
+        else: out[-1][1] += tick
+    return [tuple(x) for x in out]
+
 def music():
     sq = bytes([80] * 8 + [(-80) & 255] * 24)                                 # 25% pulse lead
     saw = bytes([int(round(110 - 220 * i / 32)) & 255 for i in range(32)])    # saw bass
+    tri = bytes([int(round(90 - 180 * abs(i - 16) / 16)) & 255 for i in range(32)])   # the arpeggios: triangle
     asm = ['; music, generated by tools/make_gfx.py']
     for name, (mel, bas, loop) in SONGS.items():
-        for ch, notes in (('a', mel), ('b', bas)):
+        total = sum(l for p, l in mel)
+        harm = HARM.get(name); dr = drums(name, total)
+        for ch, notes in (('a', mel), ('b', bas), ('c', harm), ('d', dr)):
+            if notes is None: continue
             words = []
             for p, l in notes: words += [p or 0, l]
             words += [0xffff if loop else 0xfffe, 0]
             for k in range(0, len(words), 32):
                 asm.append(('song_%s_%s:' % (name, ch) if k == 0 else '') + '\tdc.w\t%s' % ','.join('$%x' % w for w in words[k:k + 32]))
     asm.append('song_table:')
-    for name in SONGS: asm.append('\tdc.l\tsong_%s_a,song_%s_b' % (name, name))
-    return sq, saw, '\n'.join(asm) + '\n'
-
+    for name in SONGS:
+        mel = SONGS[name][0]
+        c = 'song_%s_c' % name if name in HARM else '0'
+        d = 'song_%s_d' % name if drums(name, sum(l for p, l in mel)) else '0'
+        asm.append('\tdc.l\tsong_%s_a,song_%s_b,%s,%s' % (name, name, c, d))
+    return sq, saw, tri, '\n'.join(asm) + '\n'
 # ------------------------------------------------------------------ main
 def save_prev(im, pal, name, scale=2):
     im = im.copy(); p = []
@@ -707,13 +771,14 @@ def main():
     lay = ['%s\tequ\t%d' % (k, v) for k, v in eq.items()]
     open(os.path.join(OUT, 'layout.i'), 'w').write('\n'.join(lay) + '\n')
     snd = sounds()
-    sq, saw, masm = music()
+    sq, saw, tri, masm = music()
     L.append('\tsection\tsamples,data_c')
     for k, v in snd.items():
         open(os.path.join(OUT, 'snd_%s.raw' % k), 'wb').write(v)
         L.append('\teven\nsnd_%s:\tincbin\t"snd_%s.raw"\nsnd_%s_end:' % (k, k, k))
     L.append('\teven\ninst_lead:\tdc.b\t%s' % ','.join(str(b if b < 128 else b - 256) for b in sq))
     L.append('inst_bass:\tdc.b\t%s' % ','.join(str(b if b < 128 else b - 256) for b in saw))
+    L.append('inst_harm:\tdc.b\t%s' % ','.join(str(b if b < 128 else b - 256) for b in tri))
     ew = engine_wave()
     L.append('inst_engine:\tdc.b\t%s' % ','.join(str(b if b < 128 else b - 256) for b in ew))
     L.append('snd_null:\tdc.w\t0,0')
@@ -725,7 +790,7 @@ def main():
     L.append(ovl_asm)
     L.append('snd_table:')
     for k in SND:
-        rate = 8000 if k.startswith('v_') else RATE
+        rate = 8000 if k.startswith('v_') or k == 'cheer' else RATE
         L.append('\tdc.l\tsnd_%s\n\tdc.w\t(snd_%s_end-snd_%s)/2,%d' % (k, k, k, 3546895 // rate))
     L.append(masm)
     open(os.path.join(OUT, 'gfx.i'), 'w').write('\n'.join(L) + '\n')
