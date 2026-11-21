@@ -4,7 +4,7 @@ Mark publishes to itch.io on a fixed day of the week (Sunday), not after every b
 Everything that is built in between is collected here, so the next itch release
 (page update, uploads, devlog, announcement) shows every version since the last one.
 
-**On itch now:** V0.3 TEST VERSION (status In development, paid 2.00€ or more), published 20 November 2026 on request.
+**On itch now:** V0.5 TEST VERSION as Stronkie's RC Cup (before: V0.3 (status In development, paid 2.00€ or more), published 20 November 2026 on request.
 Visible: "V0.3 (LATEST) - Disk image ADF / Hard drive / CF card / WHDLoad" (paid), the free demo
 "DEMO (FREE) - Disk image ADF" + "DEMO (FREE) - WHDLoad" (made from V0.2: 2 races + practice, no saving),
 and the free print kit (manual A5, box A3, disk labels A4). V0.1 and V0.2 files are hidden ("Older version - ...").
@@ -13,29 +13,16 @@ Keep the demo as it is.
 itch edit page: https://itch.io/game/edit/5410595 (public page https://stronkie.itch.io/rc-turbo-cup)
 
 ## Versions waiting to be published
-
-### V0.5 TEST VERSION - 21 November 2026 (built, on GitHub, in Downloads and Dropbox)
-- NEW NAME: Stronkie's RC Cup (was RC Turbo Cup). On Sunday: rename the itch page title, update the description, cover and the print kit files (StronkiesRCCup_*.pdf); keep the same page (one page per game)
-- New file names: StronkiesRCCup_V0.5.adf / _harddrive.zip / _WHDLoad.lha/.zip, drawer StronkiesRCCup, game RCCup (career RCCup.dat)
-- STRONKIE POCKET is now a simple 4 shade grey screen like the old handhelds (white road, flat grey ground, black/white kerbs, light grey cars with black outlines)
-- Screenshots: v05_*
-
-### V0.4 TEST VERSION - 21 November 2026 (built, on GitHub, in Downloads and Dropbox)
-- Two new tracks: the Kitchen Table Trophy (in the cups) and the Bathroom Blitz (secret)
-- The cups have 9 races now; the National Cup races every track backwards, the World Championship every second race
-- Unlockables: a gold trophy opens the secret track in practice, gold in all three cups gives THE GOLDEN CAR
-- Time trial (in practice) against the ghost of your best lap, saved on the disk
-- Practice modes: race, race backwards, time trial
-- STRONKIE POCKET: the race on a little handheld with a 4 shade green LCD (SCREEN on the title)
-- Start lights gantry and big texts: LAP 2, LAP 3, FINAL LAP!, FINISH!, NEW RECORD!
-- Flashing zipper arrows, waving flags, crackling electric plates, camera flashes
-- Title intro: toy cars racing across, the logo wobbles on the beat
-- Music with drums and arpeggios (4 channels on the title and in the shop), a crowd at the finish, the motor sings higher with every upgrade
-- WHDLoad saves the career and the ghosts
-- Files: RCTurboCup_V0.4.adf, RCTurboCup_V0.4_harddrive.zip, whdload/RCTurboCup_V0.4_WHDLoad.lha/.zip; screenshots v04_*
-- The demo stays as it is (V0.2)
+(none yet)
 
 ## Released on itch
+
+### 21 November 2026: V0.5 TEST VERSION (with V0.4) - new name Stronkie's RC Cup (published on request)
+- Page title renamed to Stronkie's RC Cup (URL kept: stronkie.itch.io/rc-turbo-cup), new description, cover, 6 new screenshots in front
+- Files: "V0.5 (LATEST) - Disk image ADF / Hard drive / CF card / WHDLoad" (paid 2.00€ or more, price untouched); demo unchanged (V0.2);
+  new print kit (StronkiesRCCup_*.pdf, free); V0.3 files and the old RC Turbo Cup print kit hidden as "Older version - ..."
+- Devlog: https://stronkie.itch.io/rc-turbo-cup/devlog/1795647/stronkies-rc-cup-v05-a-new-name-a-4-shade-handheld-mode-ghosts-backwards-races-and-more
+- Announcement: https://stronkie.itch.io/rc-turbo-cup/devlog/1795648/stronkies-rc-cup-v05-is-out-please-rate-review-and-help-test
 
 ### 20 November 2026: V0.3 TEST VERSION (easier to get loose from the walls)
 - Devlog: https://stronkie.itch.io/rc-turbo-cup/devlog/1794780/rc-turbo-cup-v03-no-more-getting-stuck-on-the-walls
