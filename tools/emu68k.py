@@ -333,7 +333,7 @@ class Amiga:
         regs = list(self.custom)
         cop = self.cregl(0x80) & 0x7fffe
         bpl = [0] * 6
-        cp = cop; waiting = None; done = False; pal0 = None
+        cp = cop; waiting = None; done = False; pal0 = None; pal_lines = {}
         def amiga_rgb(c):
             return (((c >> 8) & 15) * 17, ((c >> 4) & 15) * 17, (c & 15) * 17)
         copper_on = (self.dmacon & 0x280) == 0x280
@@ -388,6 +388,7 @@ class Amiga:
                 for p in range(nplanes):
                     bpl[p] += fetch * 2 + (mod1 if p % 2 == 0 else mod2)
                 if y == 0: pal0 = pal
+                pal_lines[y] = pal
         # hardware sprites (one use per channel, 3 colours + transparent, or attached pairs: 15 colours)
         if self.dmacon & 0x220 == 0x220:
             pal = pal0
@@ -414,7 +415,7 @@ class Amiga:
                             sh = 15 - i
                             c = ((a0 >> sh) & 1) | (((a1 >> sh) & 1) << 1) | (((b0 >> sh) & 1) << 2) | (((b1 >> sh) & 1) << 3)
                             xx = hs - 0x81 + i
-                            if c and 0 <= xx < 320: px[xx, yy] = pal[16 + c]
+                            if c and 0 <= xx < 320: px[xx, yy] = pal_lines.get(yy, pal)[16 + c]
                     continue
                 for (sp, vs, ve, hs, ctl), nn in ((o, n + 1), (e, n)):
                     if ve <= vs: continue
@@ -427,7 +428,7 @@ class Amiga:
                             c = ((d0 >> (15 - i)) & 1) | (((d1 >> (15 - i)) & 1) << 1)
                             xx = hs - 0x81 + i
                             if c and 0 <= xx < 320:
-                                px[xx, yy] = pal[16 + (nn >> 1) * 4 + c]
+                                px[xx, yy] = pal_lines.get(yy, pal)[16 + (nn >> 1) * 4 + c]
         return img
 
     # ------------------------------------------------------------- OS stubs

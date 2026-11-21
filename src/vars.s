@@ -86,6 +86,9 @@ ovl_dmod	ds.w	1
 ovl_size	ds.w	1
 ovl_dst		ds.l	1
 lap_last	ds.w	1
+tcars		ds.w	4*3	; the title cars: x, speed, design
+wob_amp		ds.w	1
+wob_phase	ds.w	1
 ovl_buf		ds.b	OVL_RAW
 	even	; just unlocked (bits as r_unlock)
 practice	ds.b	1

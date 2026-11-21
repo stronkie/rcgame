@@ -296,6 +296,7 @@ wait_blit:
 ;==============================================================================
 init_display:
 	movem.l	d0-d2/a0-a1,-(sp)
+	bsr	build_cop_fx
 	; the sprite pointers in both copper lists: our 8 sprite buffers
 	lea	cop_spr,a0
 	bsr	.spr
@@ -364,13 +365,22 @@ init_display:
 
 ; set_menu_pal: a0 = 32 colours for the menu screen
 set_menu_pal:
-	movem.l	d0/a0-a1,-(sp)
+	movem.l	d0/a0-a2,-(sp)
 	lea	cop_col+2,a1
 	moveq	#31,d0
 .c	move.w	(a0)+,(a1)
 	addq.l	#4,a1
 	dbf	d0,.c
-	movem.l	(sp)+,d0/a0-a1
+	lea	-32(a0),a0		; 16-31 also in the lane blocks
+	lea	cop_fx+COP_STRIP1+2,a1
+	lea	cop_fx+COP_STRIP2+2,a2
+	moveq	#15,d0
+.l	move.w	(a0),(a1)
+	move.w	(a0)+,(a2)
+	addq.l	#4,a1
+	addq.l	#4,a2
+	dbf	d0,.l
+	movem.l	(sp)+,d0/a0-a2
 	rts
 
 ; menu_black: all menu colours black (before a new picture is unpacked)
@@ -381,10 +391,17 @@ menu_black:
 .c	clr.w	(a1)
 	addq.l	#4,a1
 	dbf	d0,.c
+	lea	cop_fx+COP_STRIP1+2,a1
+	moveq	#15,d0
+.s1	clr.w	(a1)
+	clr.w	COP_STRIP2-COP_STRIP1(a1)
+	addq.l	#4,a1
+	dbf	d0,.s1
 	movem.l	(sp)+,d0/a1
 	rts
 
 show_menu_mode:
+	bsr	menu_fx_off
 	move.l	#copperlist,cur_cop
 	move.l	#copperlist,CUSTOM+$80
 	clr.b	race_mode
@@ -395,6 +412,49 @@ show_race_mode:
 	move.l	#cop_race,cur_cop
 	move.l	#cop_race,CUSTOM+$80
 	st	race_mode
+	rts
+
+COP_FX		equ	TWOB_N*8+4+64+4+64
+COP_STRIP1	equ	TWOB_N*8+4		; the car lane: colours 16-31
+COP_STRIP2	equ	COP_STRIP1+64+4		; ... and back
+
+; build_cop_fx: the copper waits for the wobble and the lane (once)
+build_cop_fx:
+	movem.l	d0-d2/a0,-(sp)
+	lea	cop_fx,a0
+	move.w	#($2c+TWOB_Y)<<8|$07,d0
+	moveq	#TWOB_N-1,d1
+.w	move.w	d0,(a0)+
+	move.w	#$fffe,(a0)+
+	move.w	#$0102,(a0)+
+	clr.w	(a0)+
+	add.w	#$0100,d0
+	dbf	d1,.w
+	move.w	#($2c+TSTRIP_Y-1)<<8|$df,(a0)+
+	move.w	#$fffe,(a0)+
+	bsr.s	.cols
+	move.w	#($2c+TSTRIP_Y2)<<8|$07,(a0)+
+	move.w	#$fffe,(a0)+
+	bsr.s	.cols
+	movem.l	(sp)+,d0-d2/a0
+	rts
+.cols	move.w	#$1a0,d0
+	moveq	#15,d1
+.c	move.w	d0,(a0)+
+	clr.w	(a0)+
+	addq.w	#2,d0
+	dbf	d1,.c
+	rts
+
+; menu_fx_off: no wobble, the lane in the picture's own colours
+menu_fx_off:
+	movem.l	d0/a0,-(sp)
+	lea	cop_fx+6,a0
+	moveq	#TWOB_N-1,d0
+.w	clr.w	(a0)
+	addq.l	#8,a0
+	dbf	d0,.w
+	movem.l	(sp)+,d0/a0
 	rts
 
 ; set_race_cols: a0 = 16 track colours (0-15); 16-31 from race_shared
@@ -1141,7 +1201,10 @@ sound_tick:
 	blo	.ch
 	movem.l	(sp)+,d0-d3/a0-a1/a5
 	rts
-.drum	lea	mus_ptr,a0		; a drum: on channel 3 when no effect is playing
+.drum	cmp.w	#1,d2			; (a kick: the title logo wobbles)
+	bne.s	.nk
+	st	beat_flag
+.nk	lea	mus_ptr,a0		; a drum: on channel 3 when no effect is playing
 	move.l	a1,(a0,d0.w)
 	lea	mus_left,a0
 	move.w	d1,d0
@@ -1167,7 +1230,7 @@ sound_tick:
 	moveq	#64,d2
 .dv	move.w	d2,sfx_vol
 	move.b	#1,sfx_st
-	bra.s	.next
+	bra	.next
 
 ;==============================================================================
 ;  the main loop
@@ -1267,6 +1330,7 @@ cop_spr	ds.w	8*4
 cop_bpl	dc.w	$00e0,0,$00e2,0,$00e4,0,$00e6,0,$00e8,0,$00ea,0
 	dc.w	$00ec,0,$00ee,0,$00f0,0,$00f2,0
 cop_col	ds.w	32*2
+cop_fx	ds.w	COP_FX/2		; the title: the logo wobble, the car lane colours
 	dc.w	$ffff,$fffe
 
 cop_race				; the race: the scrolling track, then the HUD
@@ -1334,6 +1398,7 @@ i_kpress	ds.w	1
 elapsed		ds.w	1
 state_timer	ds.w	1
 sfx_st		ds.b	1
+beat_flag	ds.b	1
 music_on	ds.b	1
 quit		ds.b	1
 whd_mode	ds.b	1

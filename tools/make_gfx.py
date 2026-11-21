@@ -442,6 +442,9 @@ def paste_logo(im, x, y, scale=1):
     im.paste(lg, (x - lg.width // 2, y), lg)
     return lg.size
 
+TSTRIP_Y, TSTRIP_Y2 = 78, 110     # the car lane on the title (screen lines)
+TWOB_Y, TWOB_N = 12, 50          # the logo lines that wobble on the beat
+
 def title_screen():
     im = track_backdrop(8, 300, 230, 0.5)
     d = ImageDraw.Draw(im)
@@ -452,11 +455,24 @@ def title_screen():
     d.rectangle([40, 112, 280, 236], outline=(110, 190, 255))
     logo_text(im, 32, 34)
     outlined(d, (160, 66), 'THE TOY CAR RACING CHAMPIONSHIP', ttf(9), (255, 214, 40), 1)
-    big_car(im, 4, 70, 4, 1, [(100, 0, 0), (220, 30, 30), (255, 160, 150)], 3)
-    big_car(im, 262, 70, 2, 13, [(0, 20, 60), (50, 110, 230), (150, 200, 255)], 3)
+    # the lane where the cars race across (sprites): a strip of road
+    d.rectangle([0, TSTRIP_Y + 2, 319, TSTRIP_Y2 - 3], fill=(44, 44, 52))
+    for x in range(0, 320, 4):
+        d.rectangle([x, TSTRIP_Y, x + 1, TSTRIP_Y + 1], fill=(220, 30, 30) if x % 8 == 0 else (255, 255, 255))
+        d.rectangle([x, TSTRIP_Y2 - 2, x + 1, TSTRIP_Y2 - 1], fill=(220, 30, 30) if x % 8 == 4 else (255, 255, 255))
+    for x in range(8, 320, 24):
+        d.rectangle([x, (TSTRIP_Y + TSTRIP_Y2) // 2 - 1, x + 11, (TSTRIP_Y + TSTRIP_Y2) // 2], fill=(150, 150, 170))
     outlined(d, (160, 246), 'Created By Mark Stronks, Stronkie Soft  V%s' % VERSION, ttf(8, bold=False), (230, 230, 230), 1)
-    lw, lh = paste_logo(im, 160, 80)
     q, pal = quantize(im, MENU_FIXED)
+    # in the lane only colours 0-15: there 16-31 are the cars (a copper split)
+    a = np.array(q)
+    p = np.array([rgb(c) for c in pal[:16]], float)
+    for y in range(TSTRIP_Y - 1, TSTRIP_Y2 + 1):
+        for x in range(320):
+            if a[y, x] >= 16:
+                c = np.array(rgb(pal[a[y, x]]), float)
+                a[y, x] = int(np.argmin(((p - c) ** 2).sum(1)))
+    q = Image.fromarray(a.astype(np.uint8), 'P'); q.putpalette(sum((list(rgb(c)) for c in pal), []))
     return q, pal
 
 def menu_screen():
@@ -756,7 +772,7 @@ def main():
     for k in range(5): L.append('\tdc.b\t\'%s\',0' % SP.DESIGNS[k]['name'])
     L.append('\teven')
     L.append(tables())
-    eq = dict(CAR_H=SP.CAR_H, CARSPR=SP.CAR_H * 8, CAR_AX=int(SP.ANCHOR[0]), CAR_AY=int(SP.ANCHOR[1]), NTRACKS=len(T.TRACKS), WW=T.WW, WH=T.WH, SURF_W=T.SW, SURF_H=T.SH,
+    eq = dict(TSTRIP_Y=TSTRIP_Y, TSTRIP_Y2=TSTRIP_Y2, TWOB_Y=TWOB_Y, TWOB_N=TWOB_N, CAR_H=SP.CAR_H, CARSPR=SP.CAR_H * 8, CAR_AX=int(SP.ANCHOR[0]), CAR_AY=int(SP.ANCHOR[1]), NTRACKS=len(T.TRACKS), WW=T.WW, WH=T.WH, SURF_W=T.SW, SURF_H=T.SH,
               HUD_H=HUD_H, MM_X=MM_X, MM_Y=MM_Y, NICONS=len(ICONS), NSONGS=len(SONGS), ROAD_R=T.R)
     for i, n in enumerate(['WALL', 'ROAD', 'KERB', 'OIL', 'SAND', 'WATER', 'MARBLE', 'BUMP', 'ZIP', 'RAMP', 'GRASS', 'ZAP']):
         eq['SURF_' + n] = i

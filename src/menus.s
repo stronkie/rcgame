@@ -121,6 +121,13 @@ st_title_in:
 	bsr	unlz
 	lea	title_pal,a0
 	bsr	set_menu_pal
+	lea	shared_pal,a0		; the car lane: the car colours
+	lea	cop_fx+COP_STRIP1+2,a1
+	moveq	#15,d0
+.lc	move.w	(a0)+,(a1)
+	addq.l	#4,a1
+	dbf	d0,.lc
+	bsr	title_cars_init
 	bsr	tgt_screen
 	moveq	#SONG_TITLE,d0
 	moveq	#48,d1
@@ -135,6 +142,111 @@ st_title_in:
 	bsr	draw_title_menu
 	lea	st_title,a0
 	bra	set_state
+
+; the title: toy cars racing across, the logo wobbling on the beat
+TCAR_DIR	equ	14			; facing right on the screen
+title_cars_init:
+	movem.l	d0-d1/a0,-(sp)
+	lea	tcars,a0
+	moveq	#3,d1
+.c	bsr	title_car_new
+	move.w	d1,d0			; spread out at the start
+	mulu	#80*16,d0
+	add.w	#20*16,d0
+	neg.w	d0
+	move.w	d0,(a0)
+	lea	6(a0),a0
+	dbf	d1,.c
+	clr.w	wob_amp
+	movem.l	(sp)+,d0-d1/a0
+	rts
+
+title_car_new:				; a0 = car: x (1/16 px), speed, design
+	move.l	d0,-(sp)
+	moveq	#120,d0
+	bsr	rand_n
+	add.w	#40,d0
+	lsl.w	#4,d0
+	neg.w	d0
+	move.w	d0,(a0)
+	moveq	#40,d0
+	bsr	rand_n
+	add.w	#36,d0
+	move.w	d0,2(a0)
+	moveq	#5,d0
+	bsr	rand_n
+	move.w	d0,4(a0)
+	move.l	(sp)+,d0
+	rts
+
+title_anim:
+	movem.l	d0-d7/a0-a2,-(sp)
+	lea	tcars,a2
+	moveq	#0,d7
+.car	move.w	2(a2),d0
+	move.w	elapsed,d1
+	beq.s	.e
+	mulu	d1,d0
+.e	add.w	d0,(a2)
+	cmp.w	#340*16,(a2)
+	blt.s	.in
+	move.l	a2,a0
+	bsr	title_car_new
+.in	move.w	4(a2),d0		; the picture: design, facing right
+	lsl.w	#5,d0
+	add.w	#TCAR_DIR,d0
+	mulu	#CARSPR,d0
+	lea	cars_gfx,a0
+	add.l	d0,a0
+	move.w	(a2),d0
+	asr.w	#4,d0
+	moveq	#3,d1			; car 0 in the front lane
+	sub.w	d7,d1
+	lsl.w	#2,d1
+	add.w	#TSTRIP_Y+3,d1
+	move.w	d7,d3
+	move.w	d7,d4
+	bsr	put_car
+	lea	6(a2),a2
+	addq.w	#1,d7
+	cmp.w	#4,d7
+	blo.s	.car
+	; the wobble: big on a kick, dying away
+	tst.b	beat_flag
+	beq.s	.nb
+	clr.b	beat_flag
+	move.w	#15<<8,wob_amp
+.nb	move.w	wob_amp,d0
+	move.w	d0,d1
+	lsr.w	#3,d1
+	sub.w	d1,d0
+	move.w	d0,wob_amp
+	lsr.w	#8,d0			; amplitude 0..15
+	addq.w	#5,wob_phase
+	lea	cop_fx+6,a0
+	lea	sintab,a1
+	move.w	wob_phase,d2
+	moveq	#TWOB_N-1,d6
+.w	move.w	d2,d1
+	and.w	#255,d1
+	add.w	d1,d1
+	move.w	(a1,d1.w),d1		; -256..256
+	add.w	#256,d1
+	mulu	d0,d1
+	lsr.l	#8,d1
+	lsr.w	#1,d1			; 0..amplitude
+	cmp.w	#15,d1
+	bls.s	.ok
+	moveq	#15,d1
+.ok	move.w	d1,d3
+	lsl.w	#4,d3
+	or.w	d3,d1
+	move.w	d1,(a0)
+	addq.l	#8,a0
+	add.w	#11,d2
+	dbf	d6,.w
+	movem.l	(sp)+,d0-d7/a0-a2
+	rts
 
 draw_title_menu:
 	movem.l	d0-d7/a0,-(sp)
@@ -193,6 +305,7 @@ draw_title_menu:
 	rts
 
 st_title:
+	bsr	title_anim
 	bsr	menu_keys
 	tst.w	d0
 	beq.s	.k
