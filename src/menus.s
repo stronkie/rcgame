@@ -1813,7 +1813,7 @@ st_ttend:
 	bra	set_state
 .x	rts
 ;------------------------------------------------------------------------------
-; the career on disk: RCTurbo.dat
+; the career on disk: RCCup.dat
 ;------------------------------------------------------------------------------
 load_records:
 	movem.l	d0-d5/a0-a1/a6,-(sp)
@@ -1993,7 +1993,7 @@ champ_text
 	dc.b	'THE BEST RC DRIVER IN THE WORLD.',0
 	dc.b	' ',0
 	dc.b	'THANK YOU FOR PLAYING',0
-	dc.b	'RC TURBO CUP',0
+	dc.b	"STRONKIE'S RC CUP",0
 	dc.b	' ',0
 	dc.b	'CREATED BY MARK STRONKS, STRONKIE SOFT',0
 	dc.b	0

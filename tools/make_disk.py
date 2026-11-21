@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
-"""make_disk.py - builds the release files for RC Turbo Cup:
+"""make_disk.py - builds the release files for Stronkie's RC Cup:
 
-  build/RCTurboCup_V<ver>.adf            bootable OFS disk (Gotek / WinUAE)
-  build/RCTurboCup_V<ver>_harddrive.zip  drawer for hard drive / CF card
+  build/StronkiesRCCup_V<ver>.adf            bootable OFS disk (Gotek / WinUAE)
+  build/StronkiesRCCup_V<ver>_harddrive.zip  drawer for hard drive / CF card
 
 Writes its own Kickstart 1.3 bootblock, OFS file system and Workbench icons.
 Usage: python3 tools/make_disk.py 1.0
@@ -13,9 +13,9 @@ from PIL import Image, ImageDraw
 VER = sys.argv[1] if len(sys.argv) > 1 else '1.0'
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 B = os.path.join(ROOT, os.environ.get('DISK_BUILD', 'build'))
-GAME = 'RCTurbo'
-DRAWER = os.environ.get('DISK_DRAWER', 'RCTurboCup')
-VOLUME = os.environ.get('DISK_VOLUME', 'RCTurboCup')
+GAME = 'RCCup'
+DRAWER = os.environ.get('DISK_DRAWER', 'StronkiesRCCup')
+VOLUME = os.environ.get('DISK_VOLUME', 'StronkiesRCCup')
 
 # ---------------------------------------------------------------- icons
 WB13 = [(0x00, 0x55, 0xaa), (0xff, 0xff, 0xff), (0x00, 0x00, 0x00), (0xff, 0x88, 0x00)]
@@ -295,7 +295,7 @@ def main():
     s = adf.mkdir(880, 'S')
     adf.addfile(s, 'Startup-Sequence', (GAME + '\n').encode())
     img = adf.finish(boot)
-    NAME = os.environ.get('DISK_NAME', 'RCTurboCup_V%s' % VER)
+    NAME = os.environ.get('DISK_NAME', 'StronkiesRCCup_V%s' % VER)
     adfname = os.path.join(B, NAME + '.adf')
     open(adfname, 'wb').write(img)
 

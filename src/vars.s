@@ -1,7 +1,7 @@
 ;------------------------------------------------------------------------------
 ;  vars.s - variables (bss)
 ;------------------------------------------------------------------------------
-; the career, saved to disk as RCTurbo.dat (REC_SIZE bytes)
+; the career, saved to disk as RCCup.dat (REC_SIZE bytes)
 records
 r_magic		ds.l	1
 r_cash		ds.l	1

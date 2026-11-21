@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""make_print.py - the printed extras of RC Turbo Cup, in the style of a
+"""make_print.py - the printed extras of Stronkie's RC Cup, in the style of a
 1980s/90s Amiga big box release.
 
-  print/RCTurboCup_Manual.pdf      A5 manual (8 pages)
-  print/RCTurboCup_DiskLabels.pdf  A4 sheet of 3.5" disk labels
-  print/RCTurboCup_Box.pdf         fold-up box with the system requirements: A3 full size + an A4 mini
+  print/StronkiesRCCup_Manual.pdf      A5 manual (8 pages)
+  print/StronkiesRCCup_DiskLabels.pdf  A4 sheet of 3.5" disk labels
+  print/StronkiesRCCup_Box.pdf         fold-up box with the system requirements: A3 full size + an A4 mini
 
 Uses the screenshots in screenshots/, the cover art (itch/cover_630x500.png) and
 the game's own car and pickup graphics.  Created By Mark Stronks, Stronkie Soft 2026.
@@ -67,7 +67,7 @@ def chequer(c, x, y, w, h, n=None):
             c.setFillColor(white if (i + r) % 2 == 0 else black)
             c.rect(x + i * s, y + r * s, s, s, stroke=0, fill=1)
 
-def title_text(c, cx, y, size, text='RC TURBO CUP'):
+def title_text(c, cx, y, size, text="STRONKIE'S RC CUP"):
     """the logo: chrome yellow letters with a red shadow"""
     c.setFont('Head', size)
     for d, col in ((size * 0.09, HexColor('#5a0000')), (size * 0.06, HexColor('#a00000')), (size * 0.03, RED)):
@@ -92,7 +92,7 @@ def page_frame(c, W, H, n, title):
     c.setFillColor(NAVY); c.rect(0, H - 13 * mm, W, 13 * mm, stroke=0, fill=1)
     chequer(c, 0, H - 15 * mm, W, 2 * mm)
     c.setFillColor(YELLOW); c.setFont('Head', 13); c.drawString(10 * mm, H - 9 * mm, title)
-    c.setFont('Sans', 7); c.setFillColor(white); c.drawRightString(W - 10 * mm, H - 8.6 * mm, 'RC TURBO CUP')
+    c.setFont('Sans', 7); c.setFillColor(white); c.drawRightString(W - 10 * mm, H - 8.6 * mm, "STRONKIE'S RC CUP")
     c.setFillColor(GREY); c.setFont('Sans', 7.5); c.drawCentredString(W / 2, 7 * mm, '- %d -' % n)
 
 # ------------------------------------------------------------------ the game's own graphics
@@ -128,7 +128,7 @@ RIVALS = [('SPEEDY SAM', ((0, 34, 85), (51, 102, 238)), 'The fastest of the four
 
 # ------------------------------------------------------------------ manual
 def build_manual(path):
-    W, H = A5; c = canvas.Canvas(path, pagesize=A5); c.setTitle('RC Turbo Cup - manual')
+    W, H = A5; c = canvas.Canvas(path, pagesize=A5); c.setTitle("Stronkie's RC Cup - manual")
     # 1 cover
     c.setFillColor(NAVY); c.rect(0, 0, W, H, stroke=0, fill=1)
     img(c, COVER, 0, H * 0.32, w=W)
@@ -139,7 +139,7 @@ def build_manual(path):
     c.showPage()
     # 2 getting started
     page_frame(c, W, H, 2, 'GETTING STARTED')
-    flow(c, [P('Welcome to RC Turbo Cup', head),
+    flow(c, [P("Welcome to Stronkie's RC Cup", head),
              P('Your radio controlled toy car is small - and the world is huge. Race through a garage, a living room, '
                'a garden, a toy store, a playground, a science lab, a building site and the championship arena, '
                'against four rivals who all want the cup.'),
@@ -147,11 +147,11 @@ def build_manual(path):
              P('An Amiga 500 (or any Amiga with a 68000) with Kickstart 1.3 and 1 MB of memory: 512K chip memory and a '
                '512K trapdoor expansion. A joystick in port 2. A hard drive, a CF card or WHDLoad are optional.'),
              P('Loading the game', sub),
-             P('<b>From disk or Gotek:</b> switch on with the RC Turbo Cup disk in drive DF0: - the game starts by itself.'),
-             P('<b>From Workbench:</b> open the disk and double click <b>RCTurbo</b>.'),
+             P("<b>From disk or Gotek:</b> switch on with the Stronkie's RC Cup disk in drive DF0: - the game starts by itself."),
+             P('<b>From Workbench:</b> open the disk and double click <b>RCCup</b>.'),
              P('<b>On your hard drive:</b> boot Workbench from the hard drive, insert the game disk and double click '
-               '<b>Install</b>. Choose the place (DH0: is fine) and the drawer RCTurboCup is made for you.'),
-             P('<b>WHDLoad:</b> unpack RCTurboCup_WHDLoad.lha on your hard drive and double click the RCTurboCup icon. '
+               '<b>Install</b>. Choose the place (DH0: is fine) and the drawer StronkiesRCCup is made for you.'),
+             P('<b>WHDLoad:</b> unpack StronkiesRCCup_WHDLoad.lha on your hard drive and double click the StronkiesRCCup icon. '
                'No Kickstart image is needed. F10 quits back to Workbench.'),
              P('Saving', sub),
              P('Your career is saved on the disk (or the hard drive) after every race, so leave the disk '
@@ -303,13 +303,13 @@ def disk_label(c, x, y, w, h, demo=False):
     c.setStrokeColor(GREY); c.setDash(2, 2); c.setLineWidth(0.3); c.rect(x, y, w, h, stroke=1, fill=0); c.setDash()
 
 def build_labels(path):
-    W, H = A4; c = canvas.Canvas(path, pagesize=A4); c.setTitle('RC Turbo Cup - disk labels')
+    W, H = A4; c = canvas.Canvas(path, pagesize=A4); c.setTitle("Stronkie's RC Cup - disk labels")
     w, h = 70 * mm, 54 * mm
     for r in range(4):
         for col in range(2):
             disk_label(c, 30 * mm + col * (w + 10 * mm), H - 25 * mm - (r + 1) * (h + 8 * mm), w, h, demo=(r == 3 and col == 1))
     c.setFont('Sans', 7); c.setFillColor(GREY)
-    c.drawCentredString(W / 2, 12 * mm, 'RC Turbo Cup - 3.5" disk labels (the last one is for the free demo). Cut along the dashed lines.')
+    c.drawCentredString(W / 2, 12 * mm, "Stronkie's RC Cup - 3.5\" disk labels (the last one is for the free demo). Cut along the dashed lines.")
     c.showPage(); c.save()
 
 # ------------------------------------------------------------------ box
@@ -320,7 +320,7 @@ def box_front(c, x, y, w, h):
     c.setFillColor(RED); c.rect(x, y, w, h * 0.1, stroke=0, fill=1)
     c.setFillColor(white); c.setFont('Head', w * 0.06); c.drawCentredString(x + w / 2, y + h * 0.032, 'AMIGA')
     c.setFillColor(YELLOW); c.setFont('SansB', w * 0.026)
-    c.drawCentredString(x + w / 2, y + h * 0.122, 'ISOMETRIC TOY CAR RACING  -  8 TRACKS  -  3 CUPS')
+    c.drawCentredString(x + w / 2, y + h * 0.122, 'ISOMETRIC TOY CAR RACING  -  10 TRACKS  -  3 CUPS')
 
 def box_back(c, x, y, w, h):
     c.setFillColor(NAVY); c.rect(x, y, w, h, stroke=0, fill=1)
@@ -353,7 +353,7 @@ def box_back(c, x, y, w, h):
 def box_spine(c, x, y, w, h, rot):
     c.saveState(); c.setFillColor(NAVY); c.rect(x, y, w, h, stroke=0, fill=1)
     c.translate(x + w / 2, y + h / 2); c.rotate(rot)
-    c.setFillColor(YELLOW); c.setFont('Head', w * 0.3); c.drawCentredString(0, -w * 0.1, 'RC TURBO CUP')
+    c.setFillColor(YELLOW); c.setFont('Head', w * 0.3); c.drawCentredString(0, -w * 0.1, "STRONKIE'S RC CUP")
     c.setFillColor(white); c.setFont('SansB', w * 0.14); c.drawCentredString(h * 0.4, -w * 0.05, 'AMIGA')
     c.drawCentredString(-h * 0.38, -w * 0.05, 'STRONKIE SOFT')
     c.restoreState()
@@ -371,7 +371,7 @@ def box_net(c, ox, oy, s):
             c.setFillColor(NAVYL); c.rect(fx, fy, w, d, stroke=0, fill=1)
             chequer(c, fx, fy + d * 0.08, w, d * 0.14)
             c.setFillColor(YELLOW); c.setFont('SansB', d * 0.15)
-            c.drawCentredString(fx + w / 2, fy + d * 0.45, 'RC TURBO CUP  -  AMIGA 500  -  STRONKIE SOFT')
+            c.drawCentredString(fx + w / 2, fy + d * 0.45, "STRONKIE'S RC CUP  -  AMIGA 500  -  STRONKIE SOFT")
     c.setFillColor(HexColor('#dddddd')); c.rect(x0 + 2 * w + d, oy + d, d * 0.6, h, stroke=0, fill=1)
     c.setDash(3, 2)
     for xx in (x0, x0 + w, x0 + w + d, x0 + 2 * w + d):
@@ -381,10 +381,10 @@ def box_net(c, ox, oy, s):
     c.setDash()
 
 def build_box(path):
-    c = canvas.Canvas(path, pagesize=landscape(A3)); c.setTitle('RC Turbo Cup - box')
+    c = canvas.Canvas(path, pagesize=landscape(A3)); c.setTitle("Stronkie's RC Cup - box")
     box_net(c, 20 * mm, 30 * mm, 1.0)
     c.setFont('Sans', 8); c.setFillColor(GREY)
-    c.drawString(20 * mm, 12 * mm, 'RC Turbo Cup - fold-up box (A3). Cut on the outside, fold on the dashed lines, glue the grey flap.')
+    c.drawString(20 * mm, 12 * mm, "Stronkie's RC Cup - fold-up box (A3). Cut on the outside, fold on the dashed lines, glue the grey flap.")
     c.showPage()
     c.setPageSize(landscape(A4))
     box_net(c, 12 * mm, 20 * mm, 0.62)
@@ -393,7 +393,7 @@ def build_box(path):
     c.showPage(); c.save()
 
 if __name__ == '__main__':
-    build_manual(os.path.join(OUT, 'RCTurboCup_Manual.pdf'))
-    build_labels(os.path.join(OUT, 'RCTurboCup_DiskLabels.pdf'))
-    build_box(os.path.join(OUT, 'RCTurboCup_Box.pdf'))
+    build_manual(os.path.join(OUT, 'StronkiesRCCup_Manual.pdf'))
+    build_labels(os.path.join(OUT, 'StronkiesRCCup_DiskLabels.pdf'))
+    build_box(os.path.join(OUT, 'StronkiesRCCup_Box.pdf'))
     for f in sorted(os.listdir(OUT)): print(f, os.path.getsize(os.path.join(OUT, f)))

@@ -1,10 +1,10 @@
 ;------------------------------------------------------------------------------
-;  whdload.s - WHDLoad slave for RC Turbo Cup
+;  whdload.s - WHDLoad slave for Stronkie's RC Cup
 ;
-;  No Kickstart image needed: the slave loads the game (data/RCTurbo.game, a
+;  No Kickstart image needed: the slave loads the game (data/RCCup.game, a
 ;  normal AmigaDOS executable) into WHDLoad's memory itself and gives it the
 ;  few OS calls it makes (a small exec/graphics/dos stand-in).  The records
-;  file RCTurbo.dat is saved through WHDLoad.  F10 quits to Workbench.
+;  file RCCup.dat is saved through WHDLoad.  F10 quits to Workbench.
 ;  Must be position independent: no absolute addresses in here.
 ;  Created By Mark Stronks, Stronkie Soft 2026
 ;------------------------------------------------------------------------------
@@ -53,12 +53,12 @@ _base	moveq	#-1,d0			; (not to be run from the CLI)
 	dc.w	0			; ws_config
 
 s_dir	dc.b	'data',0
-s_name	dc.b	'RC Turbo Cup',0
+s_name	dc.b	"Stronkie's RC Cup",0
 s_copy	dc.b	'2026 Mark Stronks, Stronkie Soft',0
 	include	"whdver.i"
 	dc.b	'F10 = quit to Workbench',0
-s_game	dc.b	'RCTurbo.game',0
-s_rec	dc.b	'RCTurbo.dat',0
+s_game	dc.b	'RCCup.game',0
+s_rec	dc.b	'RCCup.dat',0
 	even
 
 ; the stand-in library calls: offset, routine

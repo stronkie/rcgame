@@ -1,4 +1,4 @@
-"""voice.py - formant speech synthesis (from Stronkie's Battleships), used for the voices of RC Turbo Cup."""
+"""voice.py - formant speech synthesis (from Stronkie's Battleships), used for the voices of Stronkie's RC Cup."""
 import math
 import numpy as np
 SR = 8000

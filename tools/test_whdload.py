@@ -1,4 +1,4 @@
-"""test_whdload.py - runs the WHDLoad slave (build/RCTurboCup.slave) in the emulator with a small
+"""test_whdload.py - runs the WHDLoad slave (build/StronkiesRCCup.slave) in the emulator with a small
 WHDLoad stand-in (base memory, expansion memory, resload calls, the data/ folder) and plays the game
 through it: starts, loads a track from data/Tracks through resload_LoadFileOffset, races, the career
 gets saved through resload_SaveFile, loads again on the next start, and F10 quits with TDREASON_OK.   Usage: python3 tools/test_whdload.py [package dir]"""
@@ -13,7 +13,7 @@ class WHDGame(harness.Game):
     def __init__(self, pkg, out):
         os.makedirs(out, exist_ok=True); self.out = out
         self.sym = {}; names = None
-        for l in open(os.path.join(B, 'RCTurbo.map')):
+        for l in open(os.path.join(B, 'RCCup.map')):
             if l.startswith('#sections'): names = l.split()[1:]; continue
             p = l.split()
             if len(p) == 3: self.sym[p[2]] = (p[0], int(p[1], 16))
@@ -75,9 +75,9 @@ class WHDGame(harness.Game):
 
 def main():
     import autopilot
-    pkg = sys.argv[1] if len(sys.argv) > 1 else os.path.join(B, 'whdload', 'RCTurboCup')
+    pkg = sys.argv[1] if len(sys.argv) > 1 else os.path.join(B, 'whdload', 'StronkiesRCCup')
     data = os.path.join(pkg, 'data')
-    if os.path.exists(os.path.join(data, 'RCTurbo.dat')): os.remove(os.path.join(data, 'RCTurbo.dat'))
+    if os.path.exists(os.path.join(data, 'RCCup.dat')): os.remove(os.path.join(data, 'RCCup.dat'))
     ok = True
     def check(n, c):
         nonlocal ok; ok &= bool(c); print(('PASS ' if c else 'FAIL ') + n)
@@ -103,7 +103,7 @@ def main():
     b = g.A('cars'); g.am.ww(b + 16, 3); g.am.ww(b + 20, 1)
     autopilot.drive(g, 1500)
     check('race finished', g.wait('st_results', 900)); g.run(10); g.shot('03_results')
-    check('career saved through WHDLoad', g.saves and g.saves[-1] == 128 and open(os.path.join(data, 'RCTurbo.dat'), 'rb').read()[:4] == b'RCT2')
+    check('career saved through WHDLoad', g.saves and g.saves[-1] == 128 and open(os.path.join(data, 'RCCup.dat'), 'rb').read()[:4] == b'RCT2')
     g.fire(); g.wait('st_shop', 600); g.run(10)
     g.key(0x45, 30); g.wait('st_title', 600); g.run(10)
     g.am.tap(0x59)

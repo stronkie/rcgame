@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """sprites.py - the RC cars (16 directions, 5 classes, with and without roll cage),
-missiles, bombs and explosions of RC Turbo Cup, as Amiga sprite data.
+missiles, bombs and explosions of Stronkie's RC Cup, as Amiga sprite data.
 A car sprite: 16 wide, CAR_H rows, colours 1 dark, 2 body, 3 light (0 = transparent)."""
 import math
 import numpy as np

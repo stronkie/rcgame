@@ -1,5 +1,5 @@
 """test_install.py - runs the hard disk installer (build/Install) in the emulator with a small
-AmigaDOS stand-in: the game disk (volume RCTurboCup:), a hard disk DH0:, a console window
+AmigaDOS stand-in: the game disk (volume StronkiesRCCup:), a hard disk DH0:, a console window
 with typed answers.  Checks every installed file against the disk.  Usage: python3 tools/test_install.py"""
 import os, sys, shutil, struct
 sys.path.insert(0, os.path.dirname(__file__))
@@ -8,7 +8,7 @@ import emu68k
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..')
 B = os.path.join(ROOT, 'build')
 T = os.path.join(B, 'test_install')
-DISK_FILES = ['RCTurbo', 'RCTurbo.game', 'RCTurbo.info', 'ReadMe.txt', 'Install']
+DISK_FILES = ['RCCup', 'RCCup.game', 'RCCup.info', 'ReadMe.txt', 'Install']
 
 class DosAmiga(emu68k.Amiga):
     """emu68k with volumes, locks, a current directory and a console."""
@@ -78,7 +78,7 @@ def run(typed, wb=False, cwd_disk=True, name=''):
     disk = os.path.join(T, 'disk'); dh0 = os.path.join(T, 'dh0'); work = os.path.join(T, 'work')
     am = DosAmiga(T)
     am.load_hunks(os.path.join(T, 'disk', 'Install'))
-    am.setup_fs({'RCTURBOCUP': disk, 'DH0': dh0, 'WORK': work}, disk if cwd_disk else work, typed)
+    am.setup_fs({'STRONKIESRCCUP': disk, 'DH0': dh0, 'WORK': work}, disk if cwd_disk else work, typed)
     if wb:
         am.set_wb_start()
         arg = am.romp; am.romp += 16
@@ -116,30 +116,30 @@ def main():
     shutil.rmtree(T, ignore_errors=True)
     disk = os.path.join(T, 'disk'); os.makedirs(disk)
     for d in ('dh0', 'work', 'work/Games'): os.makedirs(os.path.join(T, d))
-    files = adf_files(os.path.join(B, 'RCTurboCup_V' + os.environ.get('VER', '0.4') + '.adf'))
+    files = adf_files(os.path.join(B, 'StronkiesRCCup_V' + os.environ.get('VER', '0.4') + '.adf'))
     print('on the disk:', sorted(files))
     for n, d in files.items(): open(os.path.join(disk, n), 'wb').write(d)
     os.makedirs(os.path.join(disk, 'Tracks'))
     for i in range(1, 11): shutil.copy(os.path.join(B, 'gen', 'Track%d' % i), os.path.join(disk, 'Tracks'))
-    open(os.path.join(disk, 'RCTurbo.dat'), 'wb').write(b'RCT2' + bytes(124))
+    open(os.path.join(disk, 'RCCup.dat'), 'wb').write(b'RCT2' + bytes(124))
     ok = True
     def check(n, c):
         nonlocal ok; ok &= bool(c); print(('PASS ' if c else 'FAIL ') + n)
     # 1: Workbench, just RETURN -> DH0:
     am = run([''], wb=True, name='wb')
-    dest = os.path.join(T, 'dh0', 'RCTurboCup')
+    dest = os.path.join(T, 'dh0', 'StronkiesRCCup')
     check('WB: drawer made on DH0:', os.path.isdir(dest))
-    for f in ['RCTurbo', 'RCTurbo.game', 'RCTurbo.info', 'ReadMe.txt', 'RCTurbo.dat']:
+    for f in ['RCCup', 'RCCup.game', 'RCCup.info', 'ReadMe.txt', 'RCCup.dat']:
         check('WB: ' + f + ' copied', os.path.exists(os.path.join(dest, f)) and same(os.path.join(dest, f), os.path.join(disk, f)))
     for i in range(1, 11):
         check('WB: Tracks/Track%d copied' % i, same(os.path.join(dest, 'Tracks', 'Track%d' % i), os.path.join(disk, 'Tracks', 'Track%d' % i)))
-    check('WB: drawer icon', open(os.path.join(T, 'dh0', 'RCTurboCup.info'), 'rb').read()[:2] == b'\xe3\x10')
+    check('WB: drawer icon', open(os.path.join(T, 'dh0', 'StronkiesRCCup.info'), 'rb').read()[:2] == b'\xe3\x10')
     check('WB: Done message', 'Done!' in am.out)
     print(am.out)
     # 2: CLI from elsewhere, a wrong place, then Work:Games, then install again (Y)
     am = run(['Nowhere:', 'Work:Games'], cwd_disk=False, name='cli')
     check('CLI: wrong place asked again', 'not found' in am.out)
-    check('CLI: Work:Games/RCTurboCup', os.path.exists(os.path.join(T, 'work', 'Games', 'RCTurboCup', 'RCTurbo.game')))
+    check('CLI: Work:Games/StronkiesRCCup', os.path.exists(os.path.join(T, 'work', 'Games', 'StronkiesRCCup', 'RCCup.game')))
     am = run(['Work:Games', 'y'], name='again')
     check('again: asks to install over it', 'already there' in am.out and 'Done!' in am.out)
     am = run(['q'], name='quit')

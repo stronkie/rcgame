@@ -1,8 +1,8 @@
 ;------------------------------------------------------------------------------
-;  loader.s - RC Turbo Cup loader
+;  loader.s - Stronkie's RC Cup loader
 ;
 ;  Shows the loading picture (an OS View, so the disk keeps running), loads
-;  RCTurbo.game with its own hunk loader while a progress bar fills, then runs
+;  RCCup.game with its own hunk loader while a progress bar fills, then runs
 ;  the game and frees it afterwards.  Created By Mark Stronks, Stronkie Soft 2026
 ;------------------------------------------------------------------------------
 
@@ -598,10 +598,10 @@ read_block:
 ;------------------------------------------------------------------ data
 gfxname		dc.b	'graphics.library',0
 dosname		dc.b	'dos.library',0
-gamename	dc.b	'RCTurbo.game',0
+gamename	dc.b	'RCCup.game',0
 str_loading	dc.b	'LOADING...   0%',0
 str_pct		dc.b	'LOADING...   0%',0
-str_notfound	dc.b	'RCTURBO.GAME NOT FOUND!',0
+str_notfound	dc.b	'RCCUP.GAME NOT FOUND!',0
 		even
 
 	section	data,data

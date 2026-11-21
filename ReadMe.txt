@@ -1,4 +1,4 @@
-RC TURBO CUP  V0.4 - TEST VERSION
+STRONKIE'S RC CUP  V0.5 - TEST VERSION
 Created By Mark Stronks, Stronkie Soft (c) 2026
 
 Isometric toy car racing for the Amiga 500.
@@ -6,7 +6,7 @@ Needs Kickstart / Workbench 1.3 and 1 MB (512K chip + 512K trapdoor).
 
 START
   Boot this disk (or put it on a Gotek): the game starts by itself.
-  From Workbench: double click RCTurbo.
+  From Workbench: double click RCCup.
   Hard drive: double click Install on this disk.
 
 THE GAME
@@ -34,7 +34,7 @@ PRACTICE
 
 STRONKIE POCKET
   SCREEN on the title: COLOUR or STRONKIE POCKET. In the pocket
-  the race is played on a little handheld with a 4 shade green
+  the race is played on a little handheld with a 4 shade grey
   LCD screen, just like back in the day.
 
 CONTROLS (joystick in port 2)
@@ -68,7 +68,7 @@ YOUR RIVALS
 THE SHOP
   Motor, tyres, battery, armour, a bigger weapon rack, missiles,
   bombs, spare cars and paint. Your career is saved on the disk
-  (RCTurbo.dat) after every race.
+  (RCCup.dat) after every race.
 
 This is a test version: please tell me what you think on
 https://stronkie.itch.io/ (comments).

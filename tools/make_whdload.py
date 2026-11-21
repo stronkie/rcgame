@@ -1,14 +1,14 @@
-"""make_whdload.py - the WHDLoad version of RC Turbo Cup.
+"""make_whdload.py - the WHDLoad version of Stronkie's RC Cup.
 
-  build/whdload/RCTurboCup/              the install drawer
-      RCTurboCup.slave                   (src/whdload.s)
-      RCTurboCup.info                    project icon: WHDLoad, SLAVE=..., PRELOAD
+  build/whdload/StronkiesRCCup/              the install drawer
+      StronkiesRCCup.slave                   (src/whdload.s)
+      StronkiesRCCup.info                    project icon: WHDLoad, SLAVE=..., PRELOAD
       ReadMe / ReadMe.info
-      data/RCTurbo.game                  the game (the career is saved here too)
+      data/RCCup.game                  the game (the career is saved here too)
       data/Tracks/Track1..10             the tracks
-  build/whdload/RCTurboCup.info          drawer icon
-  build/RCTurboCup_V<ver>_WHDLoad.lha    all of it (LhA level 2, stored)
-  build/RCTurboCup_V<ver>_WHDLoad.zip    the same as a zip
+  build/whdload/StronkiesRCCup.info          drawer icon
+  build/StronkiesRCCup_V<ver>_WHDLoad.lha    all of it (LhA level 2, stored)
+  build/StronkiesRCCup_V<ver>_WHDLoad.zip    the same as a zip
 
 Usage: python3 tools/make_whdload.py [version]
 Created By Mark Stronks, Stronkie Soft 2026
@@ -22,10 +22,10 @@ B = os.path.join(ROOT, os.environ.get('WHD_BUILD', 'build'))
 GEN = os.path.join(ROOT, 'build', 'gen')
 DEMO = bool(os.environ.get('WHD_DEMO'))
 VER = sys.argv[1] if len(sys.argv) > 1 else md.VER
-PKG = os.environ.get('WHD_PKG', 'RCTurboCup')
+PKG = os.environ.get('WHD_PKG', 'StronkiesRCCup')
 SLAVE = PKG + '.slave'
 
-README = """RC TURBO CUP  V{ver} - {kind} - WHDLoad version
+README = """STRONKIE'S RC CUP  V{ver} - {kind} - WHDLoad version
 Created By Mark Stronks, Stronkie Soft (c) 2026
 
 WHAT YOU NEED
@@ -41,7 +41,7 @@ INSTALL
 PLAY
   Double click the {pkg} icon in the drawer.
   F10 quits back to Workbench.
-  Your career is saved in data/RCTurbo.dat (not in the free demo).
+  Your career is saved in data/RCCup.dat (not in the free demo).
 
   From the CLI:  cd Games:{pkg}
                  WHDLoad {pkg}.slave PRELOAD
@@ -52,7 +52,7 @@ HOW TO PLAY
 
 FILES
   {pkg}.slave     the WHDLoad slave
-  data/RCTurbo.game    the game
+  data/RCCup.game    the game
   data/Tracks/         the tracks
 
 Created By Mark Stronks, Stronkie Soft
@@ -137,7 +137,7 @@ def main():
                                                  tooltypes=('SLAVE=' + SLAVE, 'PRELOAD')),
         PKG + '/ReadMe': README.format(ver=VER, kind=kind, pkg=PKG).encode('latin-1'),
         PKG + '/ReadMe.info': md.diskobject(4, text_icon(), stack=4096, tool='SYS:Utilities/More'),
-        PKG + '/data/RCTurbo.game': open(os.path.join(B, 'RCTurbo.game'), 'rb').read(),
+        PKG + '/data/RCCup.game': open(os.path.join(B, 'RCCup.game'), 'rb').read(),
         PKG + '.info': md.diskobject(2, md.drawer_image()),
     }
     os.makedirs(os.path.join(pkg, 'data', 'Tracks'))

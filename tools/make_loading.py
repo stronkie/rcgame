@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""make_loading.py - paints the loading picture of RC Turbo Cup
+"""make_loading.py - paints the loading picture of Stronkie's RC Cup
 (320x256, 32 colours, 5 separate bitplanes for the loader's OS ViewPort).
 The progress bar and its text line are left empty: the loader draws them.
 Writes build/gen/loadpic.rle, loadpic.i, preview_loading.png and itch/cover_630x500.png."""

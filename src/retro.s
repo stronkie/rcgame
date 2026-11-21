@@ -129,58 +129,24 @@ retro_convert:
 	move.w	#RS_H<<6|40,$58(a5)
 	rts
 
-; retro_lut: retro_tab = the shade (0 light .. 3 dark) of colours 0-31
-; (0-15: spread between the lightest and the darkest track colour)
+; retro_lut: retro_tab = the shade (0 light .. 3 dark) of colours 0-31.
+; Simple, like a handheld: every track uses the same 16 roles (tools/tracks.py),
+; so the ground is one flat light grey, the road white, the walls and the
+; props keep 3 shades for their shape, outlines black.
 retro_lut:
-	movem.l	d0-d5/a0-a1,-(sp)
-	lea	race_cols,a0
-	move.w	#999,d4			; darkest
-	moveq	#0,d5			; lightest
-	moveq	#15,d3
-.mm	move.w	(a0)+,d0
-	bsr	.lum
-	cmp.w	d4,d0
-	bhs.s	.n1
-	move.w	d0,d4
-.n1	cmp.w	d5,d0
-	bls.s	.n2
-	move.w	d0,d5
-.n2	dbf	d3,.mm
-	sub.w	d4,d5
-	addq.w	#1,d5			; the range
-	lea	race_cols,a0
+	movem.l	d0/a0-a1,-(sp)
+	lea	.tab(pc),a0
 	lea	retro_tab,a1
-	moveq	#15,d3
-.t	move.w	(a0)+,d0
-	bsr	.lum
-	sub.w	d4,d0
-	mulu	#5,d0			; (a little lighter: easier to see)
-	divu	d5,d0
-	moveq	#3,d1
-	sub.w	d0,d1
-	bpl.s	.t1
-	moveq	#0,d1
-.t1	move.b	d1,(a1)+
-	dbf	d3,.t
-	lea	.spr(pc),a0		; 16-31: light cars with dark outlines
-	moveq	#15,d3
-.s	move.b	(a0)+,(a1)+
-	dbf	d3,.s
-	movem.l	(sp)+,d0-d5/a0-a1
+	moveq	#31,d0
+.c	move.b	(a0)+,(a1)+
+	dbf	d0,.c
+	movem.l	(sp)+,d0/a0-a1
 	rts
-.spr	dc.b	3,3,1,0,0,2,1,0,1,1,1,0,0,2,1,0
-.lum	move.w	d0,d1			; d0 = $rgb -> 2r + 4g + b (0..105)
-	lsr.w	#8,d1
-	and.w	#15,d1
-	add.w	d1,d1
-	move.w	d0,d2
-	lsr.w	#4,d2
-	and.w	#15,d2
-	lsl.w	#2,d2
-	and.w	#15,d0
-	add.w	d1,d0
-	add.w	d2,d0
-	rts
+;		G0 G1 G2 RD RM RL W0 W1 W2 P0 P1 P2 PA WA0 WA1 SA
+.tab	dc.b	1,1,1,0,0,0,3,2,1,3,2,1,2,2,1,1
+;		black outline car car white glass ... red fx ... yellow light-glass ...
+	dc.b	3,3,2,1,0,2,2,1,2,2,2,1,1,1,2,1
+	even
 
 ; retro_colours: retro_cols = the 32 colours of the race in the handheld
 retro_colours:

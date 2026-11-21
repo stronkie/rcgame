@@ -1,4 +1,4 @@
-"""lz.py - the packer for RC Turbo Cup (unpacked in the game by unlz in src/rc.s).
+"""lz.py - the packer for Stronkie's RC Cup (unpacked in the game by unlz in src/rc.s).
 
 Format, a stream of tokens:
   $00-$7f n          n+1 literal bytes follow

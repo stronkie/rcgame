@@ -1,10 +1,10 @@
-"""harness.py - drive build/RCTurbo.game in tools/emu68k.py: symbols, keys, joystick, screenshots."""
+"""harness.py - drive build/RCCup.game in tools/emu68k.py: symbols, keys, joystick, screenshots."""
 import sys, os, re
 sys.path.insert(0, os.path.dirname(__file__))
 import emu68k
 
 class Game:
-    def __init__(self, exe='build/RCTurbo.game', mapf='build/RCTurbo.map', out='build/test', datadir='build/gen'):
+    def __init__(self, exe='build/RCCup.game', mapf='build/RCCup.map', out='build/test', datadir='build/gen'):
         os.makedirs(out, exist_ok=True); self.out = out
         self.sym = {}
         names = None

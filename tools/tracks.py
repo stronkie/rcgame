@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""tracks.py - the 8 tracks of RC Turbo Cup: layout, isometric picture, surface map,
+"""tracks.py - the 8 tracks of Stronkie's RC Cup: layout, isometric picture, surface map,
 racing line and pickup spots.  Used by tools/make_gfx.py.
 Created By Mark Stronks, Stronkie Soft.
 

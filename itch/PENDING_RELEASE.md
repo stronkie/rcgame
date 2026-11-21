@@ -14,6 +14,12 @@ itch edit page: https://itch.io/game/edit/5410595 (public page https://stronkie.
 
 ## Versions waiting to be published
 
+### V0.5 TEST VERSION - 21 November 2026 (built, on GitHub, in Downloads and Dropbox)
+- NEW NAME: Stronkie's RC Cup (was RC Turbo Cup). On Sunday: rename the itch page title, update the description, cover and the print kit files (StronkiesRCCup_*.pdf); keep the same page (one page per game)
+- New file names: StronkiesRCCup_V0.5.adf / _harddrive.zip / _WHDLoad.lha/.zip, drawer StronkiesRCCup, game RCCup (career RCCup.dat)
+- STRONKIE POCKET is now a simple 4 shade grey screen like the old handhelds (white road, flat grey ground, black/white kerbs, light grey cars with black outlines)
+- Screenshots: v05_*
+
 ### V0.4 TEST VERSION - 21 November 2026 (built, on GitHub, in Downloads and Dropbox)
 - Two new tracks: the Kitchen Table Trophy (in the cups) and the Bathroom Blitz (secret)
 - The cups have 9 races now; the National Cup races every track backwards, the World Championship every second race

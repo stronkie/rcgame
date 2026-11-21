@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""make_gfx.py - graphics, tracks, sounds and music of RC Turbo Cup (Amiga 500).
+"""make_gfx.py - graphics, tracks, sounds and music of Stronkie's RC Cup (Amiga 500).
 Created By Mark Stronks, Stronkie Soft.
 
 Writes to build/gen/ (or argv[1]):
@@ -268,8 +268,8 @@ def overlays():
 # ------------------------------------------------------------------ retro mode: the STRONKIE POCKET handheld
 # dual playfield: the frame is playfield 1 (colours 1-7, 0 = the LCD shows through), the track
 # playfield 2 in 4 shades (colours 0, 9, 10, 11).  An original design: a landscape handheld.
-LCD = [0x9b1, 0x7a1, 0x363, 0x131]          # the 4 shades, lightest first
-POCKET_COLS = [0x9b1, 0xccd, 0x99a, 0x556, 0x334, 0x111, 0xc24, 0x34a]   # 0 (LCD), 1-7: the case
+LCD = [0xeee, 0xaaa, 0x555, 0x111]          # the 4 shades of grey, lightest first
+POCKET_COLS = [0xeee, 0xccd, 0x99a, 0x556, 0x334, 0x111, 0xc24, 0x34a]   # 0 (LCD), 1-7: the case
 PK_LX0, PK_LX1, PK_LY0 = 46, 273, 20         # the LCD window (open at the bottom: the status LCD below)
 
 def pocket_frame():
@@ -470,14 +470,17 @@ def track_backdrop(n, x0, y0, dark=0.55):
     a = (np.array(crop).astype(float) * dark).astype(np.uint8)
     return Image.fromarray(a)
 
-def logo_text(im, y, size=44):
+GAME_TITLE = "STRONKIE'S RC CUP"
+def logo_text(im, y, size=44, maxw=300):
     d = ImageDraw.Draw(im)
     f = ttf(size, oblique=True)
+    while d.textlength(GAME_TITLE, font=f) > maxw and size > 10:   # fit the width
+        size -= 1; f = ttf(size, oblique=True)
     # chrome letters: red shadow, then a yellow-white gradient
     for dx, dy, c in ((4, 4, (90, 0, 0)), (3, 3, (160, 0, 0)), (2, 2, (220, 30, 30))):
-        outlined(d, (160 + dx, y + dy), 'RC TURBO CUP', f, c, 2)
+        outlined(d, (160 + dx, y + dy), GAME_TITLE, f, c, 2)
     mask = Image.new('L', im.size, 0); md = ImageDraw.Draw(mask)
-    md.text((160, y), 'RC TURBO CUP', font=f, fill=255, anchor='mm')
+    md.text((160, y), GAME_TITLE, font=f, fill=255, anchor='mm')
     grad = Image.new('RGB', im.size)
     gd = ImageDraw.Draw(grad)
     for yy in range(im.height):
@@ -490,7 +493,7 @@ def logo_text(im, y, size=44):
     outline = Image.new('L', im.size, 0); od = ImageDraw.Draw(outline)
     for dx in range(-2, 3):
         for dy in range(-2, 3):
-            od.text((160 + dx, y + dy), 'RC TURBO CUP', font=f, fill=255, anchor='mm')
+            od.text((160 + dx, y + dy), GAME_TITLE, font=f, fill=255, anchor='mm')
     im.paste((0, 0, 0), (0, 0), outline)
     im.paste(grad, (0, 0), mask)
 

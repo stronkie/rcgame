@@ -1,5 +1,5 @@
 ;------------------------------------------------------------------------------
-;  RC TURBO CUP  -  isometric toy car racing for the Amiga 500.
+;  STRONKIE'S RC CUP  -  isometric toy car racing for the Amiga 500.
 ;
 ;  Kickstart / Workbench 1.3, 512K chip + 512K trapdoor.  68000 assembly.
 ;  Created By Mark Stronks, Stronkie Soft (c) 2026
@@ -1334,7 +1334,7 @@ set_state:				; a0 = the new state
 
 gfxname		dc.b	'graphics.library',0
 dosname		dc.b	'dos.library',0
-recname		dc.b	'RCTurbo.dat',0
+recname		dc.b	'RCCup.dat',0
 demo_flag	dc.b	DEMO
 	even
 ; keyboard: raw key code, action

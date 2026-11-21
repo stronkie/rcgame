@@ -1,9 +1,9 @@
 ;------------------------------------------------------------------------------
-;  install.s - RC Turbo Cup hard disk installer
+;  install.s - Stronkie's RC Cup hard disk installer
 ;
 ;  Runs from Workbench (double-click "Install" on the game disk) or from the
-;  CLI (RCTurboCup:Install).  Opens a console window, asks where to install
-;  (default DH0:), makes the drawer RCTurboCup there with its icon and
+;  CLI (StronkiesRCCup:Install).  Opens a console window, asks where to install
+;  (default DH0:), makes the drawer StronkiesRCCup there with its icon and
 ;  copies the game, its icon, the ReadMe, the 8 tracks and any saved career
 ;  into it.
 ;  Needs only Kickstart/Workbench 1.3: no C: commands, no Installer utility.
@@ -399,23 +399,23 @@ read_line:
 ;------------------------------------------------------------------ data
 	section	data,data
 dosname		dc.b	'dos.library',0
-conname		dc.b	'CON:20/12/600/180/RC Turbo Cup - Hard Disk Installer',0
-volname		dc.b	'RCTurboCup:',0
-drawername	dc.b	'RCTurboCup',0
-f_game		dc.b	'RCTurbo.game',0
-f_main		dc.b	'RCTurbo',0
-f_icon		dc.b	'RCTurbo.info',0
+conname		dc.b	"CON:20/12/600/180/Stronkie's RC Cup - Hard Disk Installer",0
+volname		dc.b	'StronkiesRCCup:',0
+drawername	dc.b	'StronkiesRCCup',0
+f_game		dc.b	'RCCup.game',0
+f_main		dc.b	'RCCup',0
+f_icon		dc.b	'RCCup.info',0
 f_readme	dc.b	'ReadMe.txt',0
-f_rec		dc.b	'RCTurbo.dat',0
+f_rec		dc.b	'RCCup.dat',0
 f_tdir		dc.b	'Tracks',0
 f_track		dc.b	'Tracks/Track'
 f_track_n	dc.b	'1',0,0
 t_info		dc.b	'.info',0
 t_dh0		dc.b	'DH0:',0
-t_hello		dc.b	10,$9b,'1m','  RC TURBO CUP - HARD DISK INSTALLER',$9b,'0m',10
+t_hello		dc.b	10,$9b,'1m',"  STRONKIE'S RC CUP - HARD DISK INSTALLER",$9b,'0m',10
 		dc.b	'  Created By Mark Stronks, Stronkie Soft',10,10
 		dc.b	'  This puts the full game on your hard disk (or CF card)',10
-		dc.b	'  in a new drawer called RCTurboCup.',10
+		dc.b	'  in a new drawer called StronkiesRCCup.',10
 		dc.b	'  It needs about 650 KB of free space.',10,0
 t_where		dc.b	10,'  Install where? Type a disk or drawer, like DH0: or',10
 		dc.b	'  Work:Games, then press RETURN.',10
@@ -433,7 +433,7 @@ t_readerr	dc.b	' READ ERROR!',10,0
 t_writeerr	dc.b	' WRITE ERROR (disk full?)',10,0
 t_failed	dc.b	10,'  Something went wrong, the game is not installed.',10,0
 t_done		dc.b	10,'  Done! Open the drawer ',0
-t_done2		dc.b	10,'  and double-click RCTurbo to play.',10
+t_done2		dc.b	10,'  and double-click RCCup to play.',10
 		dc.b	'  (On Workbench 1.3, close and open the disk window to see it.)',10,0
 t_bye		dc.b	10,'  Nothing was installed.',10,0
 t_close		dc.b	10,'  Press RETURN to close this window.',0

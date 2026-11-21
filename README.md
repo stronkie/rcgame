@@ -1,6 +1,8 @@
-# RC Turbo Cup
+# Stronkie's RC Cup
 
-![Title](screenshots/v04_01_title.png)
+*(Called RC Turbo Cup up to V0.4.)*
+
+![Title](screenshots/v05_01_title.png)
 
 **Isometric toy car racing for the Amiga 500.** Race a radio controlled toy car through oversized rooms against Speedy Sam, Careful Carla, Mad Max and Engineer Erik. Collect upgrades and weapons on the track, spend your prize money in the shop and win three cups.
 
@@ -8,7 +10,7 @@ Created By Mark Stronks, Stronkie Soft © 2026
 
 Written in 68000 assembly for a stock Amiga 500 with Kickstart / Workbench 1.3 and a 512K trapdoor expansion (1 MB). Runs from a bootable disk (or a Gotek), from hard drive / CF card and with WHDLoad. Play it with a **joystick** in port 2 (or the keyboard).
 
-**Latest version: V0.4 - TEST VERSION.** On itch.io: https://stronkie.itch.io/rc-turbo-cup
+**Latest version: V0.5 - TEST VERSION.** On itch.io: https://stronkie.itch.io/rc-turbo-cup
 
 ## Features
 
@@ -19,7 +21,7 @@ Written in 68000 assembly for a stock Amiga 500 with Kickstart / Workbench 1.3 a
 - **Career**: Amateur Cup, National Cup and World Championship, 9 races each, with prize money, points and gold / silver / bronze trophies
 - **Unlockables**: gold in a cup opens the secret track, gold in all three cups gives you THE GOLDEN CAR
 - **Time trial** against the ghost of your best lap, saved on the disk
-- **STRONKIE POCKET**: play the race on a little handheld with a 4 shade green LCD (dual playfield)
+- **STRONKIE POCKET**: play the race on a little handheld with a simple 4 shade grey LCD, like back in the day (dual playfield)
 - **Start lights gantry and big texts** (LAP 2, FINAL LAP!, FINISH!, NEW RECORD!), flashing zippers, flags and electric plates
 - **Title intro**: toy cars race across the title, the logo wobbles on the beat
 - **4 rivals with their own personality**: Speedy Sam (fast, crashes), Careful Carla (steady), Mad Max (fires at you and rams you) and Engineer Erik (goes for every power-up)
@@ -40,7 +42,7 @@ Written in 68000 assembly for a stock Amiga 500 with Kickstart / Workbench 1.3 a
 ![Kitchen table (V0.4)](screenshots/v04_04_kitchen_table.png)
 ![Final lap (V0.4)](screenshots/v04_05_final_lap.png)
 ![Bathroom and the ghost (V0.4)](screenshots/v04_07_bathroom_ghost.png)
-![STRONKIE POCKET (V0.4)](screenshots/v04_10_pocket_race.png)
+![STRONKIE POCKET (V0.5)](screenshots/v05_03_pocket_race.png)
 ![Practice modes (V0.4)](screenshots/v04_06_practice_modes.png)
 ![Garage (V0.2)](screenshots/v02_04_garage.png)
 ![Living room (V0.2)](screenshots/v02_07_living_room.png)
@@ -57,12 +59,12 @@ Written in 68000 assembly for a stock Amiga 500 with Kickstart / Workbench 1.3 a
 
 | File | What it is |
 |---|---|
-| `RCTurboCup_V0.4.adf` | Bootable disk. Boot it, or put it on a Gotek, and the game starts by itself. To put the game on your hard drive: boot Workbench from the hard drive, insert this disk and double click **Install** |
-| `whdload/RCTurboCup_V0.4_WHDLoad.lha` | **WHDLoad version** (also as `.zip`): unpack on your hard drive and double click `RCTurboCup`. Own slave (`src/whdload.s`), no Kickstart image needed, F10 quits |
-| `RCTurboCup_V0.4_harddrive.zip` | Drawer `RCTurboCup` with the game, the tracks, its icon and the ReadMe: copy it and double click `RCTurbo` |
+| `StronkiesRCCup_V0.5.adf` | Bootable disk. Boot it, or put it on a Gotek, and the game starts by itself. To put the game on your hard drive: boot Workbench from the hard drive, insert this disk and double click **Install** |
+| `whdload/StronkiesRCCup_V0.5_WHDLoad.lha` | **WHDLoad version** (also as `.zip`): unpack on your hard drive and double click `StronkiesRCCup`. Own slave (`src/whdload.s`), no Kickstart image needed, F10 quits |
+| `StronkiesRCCup_V0.5_harddrive.zip` | Drawer `StronkiesRCCup` with the game, the tracks, its icon and the ReadMe: copy it and double click `RCCup` |
 | `demo/` | The **free demo** (made from V0.2): the first 2 races of the Amateur Cup and practice on those 2 tracks (ADF and WHDLoad), nothing is saved |
 | `print/` | The **print kit**: an 8 page manual (A5), a box to print and fold with the system requirements (A3, and an A4 mini) and disk labels (A4) as PDF |
-| `previous_versions/` | Older versions (V0.1, V0.2, V0.3) |
+| `previous_versions/` | Older versions (V0.1 - V0.4, under the old name RC Turbo Cup) |
 
 **Requirements:** Amiga 500 (or any Amiga with a 68000) with Kickstart 1.3 and 1 MB: 512K chip + 512K trapdoor. Joystick in port 2.
 
@@ -80,7 +82,7 @@ Written in 68000 assembly for a stock Amiga 500 with Kickstart / Workbench 1.3 a
 ## Building
 
 ```
-VER=0.4 sh tools/build.sh
+VER=0.5 sh tools/build.sh
 ```
 
 Needs python3 with Pillow and numpy. Everything else is in `tools/`:
@@ -99,6 +101,11 @@ Needs python3 with Pillow and numpy. Everything else is in `tools/`:
 Source: `src/main.s` (the full game) and `src/demo.s` (the demo) include `src/rc.s` (start-up, display, scrolling, sprites, unpacking, text, input, sound), `src/race.s` (cars, physics, computer drivers, weapons, pickups, laps, HUD, camera), `src/menus.s` (title, career, shop, results, practice, time trial, track loading, saving), `src/retro.s` (the STRONKIE POCKET), `src/loader.s` (the loader with the loading picture), `src/install.s` (the hard disk installer) and `src/whdload.s` (the WHDLoad slave).
 
 ## Version history
+
+### V0.5 - TEST VERSION - 21 November 2026
+- The game is now called **Stronkie's RC Cup**: new title logo, loading picture, menus, manual, box and labels
+- New file names: StronkiesRCCup_V0.5.adf, the drawer StronkiesRCCup, the game RCCup (your career is now RCCup.dat)
+- STRONKIE POCKET: a simple 4 shade grey screen like the old handhelds - a white road, a flat grey ground, black and white kerbs, walls and props in 3 shades, light grey cars with black outlines
 
 ### V0.4 - TEST VERSION - 21 November 2026
 - Two new tracks: the Kitchen Table Trophy (in the cups) and the Bathroom Blitz (secret)
