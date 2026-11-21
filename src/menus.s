@@ -215,7 +215,7 @@ title_anim:
 	tst.b	beat_flag
 	beq.s	.nb
 	clr.b	beat_flag
-	move.w	#15<<8,wob_amp
+	move.w	#6<<8,wob_amp		; (a gentle wobble)
 .nb	move.w	wob_amp,d0
 	move.w	d0,d1
 	lsr.w	#3,d1

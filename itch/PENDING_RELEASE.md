@@ -13,7 +13,10 @@ Keep the demo as it is.
 itch edit page: https://itch.io/game/edit/5410595 (public page https://stronkie.itch.io/rc-turbo-cup)
 
 ## Versions waiting to be published
-(none yet)
+
+### V0.5.1 TEST VERSION - 21 November 2026 (built, on GitHub, in Downloads and Dropbox)
+- The title screen stays put: the logo wobble no longer shifts the menu below it, and the wobble is gentler
+- Files: StronkiesRCCup_V0.5.1.adf / _harddrive.zip / _WHDLoad.lha/.zip (replace the V0.5 files on itch; V0.5 becomes "Older version")
 
 ## Released on itch
 

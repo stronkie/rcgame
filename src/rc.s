@@ -415,8 +415,8 @@ show_race_mode:
 	st	race_mode
 	rts
 
-COP_FX		equ	TWOB_N*8+4+64+4+64
-COP_STRIP1	equ	TWOB_N*8+4		; the car lane: colours 16-31
+COP_FX		equ	TWOB_N*8+8+4+64+4+64
+COP_STRIP1	equ	TWOB_N*8+8+4		; the car lane: colours 16-31
 COP_STRIP2	equ	COP_STRIP1+64+4		; ... and back
 
 ; build_cop_fx: the copper waits for the wobble and the lane (once)
@@ -431,6 +431,10 @@ build_cop_fx:
 	clr.w	(a0)+
 	add.w	#$0100,d0
 	dbf	d1,.w
+	move.w	d0,(a0)+		; after the logo: no shift (the rest stays put)
+	move.w	#$fffe,(a0)+
+	move.w	#$0102,(a0)+
+	clr.w	(a0)+
 	move.w	#($2c+TSTRIP_Y-1)<<8|$df,(a0)+
 	move.w	#$fffe,(a0)+
 	bsr.s	.cols

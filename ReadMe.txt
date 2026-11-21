@@ -1,4 +1,4 @@
-STRONKIE'S RC CUP  V0.5 - TEST VERSION
+STRONKIE'S RC CUP  V0.5.1 - TEST VERSION
 Created By Mark Stronks, Stronkie Soft (c) 2026
 
 Isometric toy car racing for the Amiga 500.
