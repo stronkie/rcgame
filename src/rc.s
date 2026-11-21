@@ -515,13 +515,17 @@ set_scroll:
 	sub.w	d2,d4			; delay = 16 - fine
 .d	move.w	d4,d2
 	lsl.w	#4,d2
+	tst.b	r_retro			; STRONKIE POCKET: only playfield 2 (the track) scrolls
+	bne.s	.r1
 	or.w	d4,d2
-	move.w	d2,cr_scroll+2
+.r1	move.w	d2,cr_scroll+2
 	and.l	#$ffff,d1
 	mulu	#TRK_RB,d1
 	ext.l	d3
 	add.l	d3,d1
 	add.l	#trackbm,d1
+	tst.b	r_retro
+	bne	.retro
 	lea	cr_bpl+2,a0
 	moveq	#4,d2
 .p	swap	d1
@@ -532,6 +536,28 @@ set_scroll:
 	add.l	#TRK_PB,d1
 	dbf	d2,.p
 	movem.l	(sp)+,d0-d4/a0
+	rts
+.retro	add.l	#TRK_PB,d1		; planes 2 and 4: track planes 1 and 3
+	lea	cr_bpl+2+8,a0
+	bsr.s	.ptr
+	add.l	#TRK_PB*2,d1
+	lea	cr_bpl+2+24,a0
+	bsr.s	.ptr
+	move.l	#pocketbm,d1		; planes 1, 3, 5: the handheld
+	lea	cr_bpl+2,a0
+	bsr.s	.ptr
+	add.l	#42,d1
+	lea	cr_bpl+2+16,a0
+	bsr.s	.ptr
+	add.l	#42,d1
+	lea	cr_bpl+2+32,a0
+	bsr.s	.ptr
+	movem.l	(sp)+,d0-d4/a0
+	rts
+.ptr	swap	d1
+	move.w	d1,(a0)
+	swap	d1
+	move.w	d1,4(a0)
 	rts
 
 ;==============================================================================
@@ -1297,6 +1323,7 @@ set_state:				; a0 = the new state
 	rts
 
 	include	"race.s"
+	include	"retro.s"
 	include	"menus.s"
 
 ;==============================================================================
@@ -1349,6 +1376,7 @@ cr_hudbpl
 	dc.w	$00e0,0,$00e2,0,$00e4,0,$00e6,0,$00e8,0,$00ea,0
 	dc.w	$00ec,0,$00ee,0,$00f0,0,$00f2,0
 	dc.w	$0102,$0000,$0108,HUD_RB-42,$010a,HUD_RB-42
+	dc.w	$0100,$5200,$0104,$0024	; (after the STRONKIE POCKET: normal again)
 cr_hudcol
 	ds.w	16*2
 	dc.w	$ffff,$fffe
@@ -1419,3 +1447,4 @@ sprbufs		ds.b	SPRBUF*8
 ovl_img		ds.w	OVL_MAXW*5*OVL_MAXH
 ovl_msk		ds.w	OVL_MAXW*5*OVL_MAXH
 ovl_save	ds.w	(OVL_MAXW+1)*5*OVL_MAXH
+pocketbm	ds.b	POCKET_RAW

@@ -138,7 +138,7 @@ st_title_in:
 	moveq	#S_V_TITLE,d0
 	bsr	sfx
 .s	clr.w	menu_sel
-	move.w	#6,menu_n
+	move.w	#7,menu_n
 	bsr	draw_title_menu
 	lea	st_title,a0
 	bra	set_state
@@ -277,10 +277,17 @@ draw_title_menu:
 	bne.s	.mo
 	lea	str_off,a0
 .mo	bsr	str_add
-.n4	bsr	str_end
+.n4	cmp.w	#6,d7
+	bne.s	.n6
+	lea	str_scr0,a0
+	tst.b	r_retro
+	beq.s	.sc
+	lea	str_scr1,a0
+.sc	bsr	str_add
+.n6	bsr	str_end
 	move.w	d7,d1
-	mulu	#16,d1
-	add.w	#124,d1
+	mulu	#14,d1
+	add.w	#120,d1
 	moveq	#M_WHITE,d2
 	cmp.w	#1,d7
 	bne.s	.na
@@ -292,7 +299,7 @@ draw_title_menu:
 	moveq	#M_YELLOW,d2
 .ns	bsr	mctext
 	addq.w	#1,d7
-	cmp.w	#6,d7
+	cmp.w	#7,d7
 	blo	.l
 	lea	str_hint,a0
 	tst.b	demo_flag
@@ -341,8 +348,13 @@ st_title:
 	bne.s	.n4
 	not.b	music_on
 	bra.s	.redraw
-.n4	lea	st_howto_in,a0
+.n4	cmp.w	#5,d0
+	bne.s	.n5
+	lea	st_howto_in,a0
 	bra	set_state
+.n5	not.b	r_retro			; the screen: colour or the STRONKIE POCKET
+	and.b	#1,r_retro
+	bsr	save_records
 .redraw	moveq	#S_CLICK,d0
 	bsr	sfx
 	bsr	draw_title_menu
@@ -1853,13 +1865,16 @@ save_records:
 	section	data,data
 said_title	dc.b	0
 	even
-title_items	dc.l	ti_new,ti_cont,ti_prac,ti_ctrl,ti_music,ti_howto
+title_items	dc.l	ti_new,ti_cont,ti_prac,ti_ctrl,ti_music,ti_howto,ti_scr
 ti_new		dc.b	'START NEW CAREER',0
 ti_cont		dc.b	'CONTINUE CAREER',0
 ti_prac		dc.b	'PRACTICE RACE',0
 ti_ctrl		dc.b	'CONTROLS: ',0
 ti_music	dc.b	'MUSIC: ',0
 ti_howto	dc.b	'HOW TO PLAY',0
+ti_scr		dc.b	'SCREEN: ',0
+str_scr0	dc.b	'COLOUR',0
+str_scr1	dc.b	'STRONKIE POCKET',0
 str_ctrl0	dc.b	'UP = GAS',0
 str_ctrl1	dc.b	'FIRE = GAS',0
 str_on		dc.b	'ON',0

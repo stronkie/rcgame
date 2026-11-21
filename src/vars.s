@@ -88,6 +88,9 @@ ovl_dst		ds.l	1
 lap_last	ds.w	1
 tcars		ds.w	4*3	; the title cars: x, speed, design
 wob_amp		ds.w	1
+retro_cols	ds.w	32
+retro_tab	ds.b	32
+retro_mt	ds.b	8
 prac_mode	ds.w	1	; practice: 0 race, 1 backwards, 2 time trial
 ttrial		ds.b	1
 gh_new		ds.b	1

@@ -190,6 +190,11 @@ race_setup:
 	dbf	d7,.off
 .tr	; colours: the track, the weather, the car paints
 	bsr	race_palette
+	bsr	race_display
+	tst.b	r_retro			; the STRONKIE POCKET: the track in 4 shades
+	beq.s	.nrt
+	bsr	retro_convert
+.nrt
 	; pickups and HUD
 	tst.b	ttrial			; (no pickups in a time trial)
 	beq.s	.sp
@@ -400,6 +405,8 @@ race_palette:
 	rts
 
 race_colours_on:
+	tst.b	r_retro
+	bne	retro_race_cols
 	lea	race_cols,a0
 	bsr	set_race_cols
 	bsr	hud_colours
@@ -2311,12 +2318,15 @@ fx_cycle:	dc.w	$810,$a20,$c40,$e60,$f80,$fa0,$fc2,$ff6,$fff,$ff6,$fc2,$fa0,$f80,
 race_draw:
 	movem.l	d0-d7/a0-a3,-(sp)
 	; the animated colour 25: zipper arrows, flags, electric plates, camera flashes
+	tst.b	r_retro
+	bne.s	.nfx
 	move.l	framecount,d0
 	lsr.w	#2,d0
 	and.w	#15,d0
 	add.w	d0,d0
 	lea	fx_cycle,a0
 	move.w	(a0,d0.w),cr_col+2+25*4
+.nfx
 	lea	cars,a2
 	; the camera: on your car, looking ahead a little
 	move.w	C_VX(a2),d0
@@ -2732,6 +2742,18 @@ ovl_build:
 	move.w	(a0)+,d2		; the 3 colours
 	move.w	(a0)+,d3
 	move.w	(a0)+,d4
+	tst.b	r_retro			; (the handheld: colours that give the shades)
+	beq.s	.nr
+	move.w	d2,d0
+	bsr	retro_ovl
+	move.w	d0,d2
+	move.w	d3,d0
+	bsr	retro_ovl
+	move.w	d0,d3
+	move.w	d4,d0
+	bsr	retro_ovl
+	move.w	d0,d4
+.nr
 	lea	ovl_img,a1
 	lea	ovl_msk,a2
 	subq.w	#1,d7

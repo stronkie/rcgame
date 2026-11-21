@@ -333,7 +333,7 @@ class Amiga:
         regs = list(self.custom)
         cop = self.cregl(0x80) & 0x7fffe
         bpl = [0] * 6
-        cp = cop; waiting = None; done = False; pal0 = None; pal_lines = {}
+        cp = cop; waiting = None; done = False; pal0 = None; pal_lines = {}; front_lines = {}
         def amiga_rgb(c):
             return (((c >> 8) & 15) * 17, ((c >> 4) & 15) * 17, (c & 15) * 17)
         copper_on = (self.dmacon & 0x280) == 0x280
@@ -383,6 +383,11 @@ class Amiga:
                     ok = (xs >= 0) & (xs < len(bits))
                     v = _np.zeros(320, _np.int32); v[ok] = bits[xs[ok]]
                     idx |= v << p
+                if regs[0x100 >> 1] & 0x400:          # dual playfield: 1, 3, 5 over 2, 4
+                    pf1 = (idx & 1) | ((idx >> 1) & 2) | ((idx >> 2) & 4)
+                    pf2 = ((idx >> 1) & 1) | ((idx >> 2) & 2)
+                    idx = _np.where(pf1 != 0, pf1, _np.where(pf2 != 0, 8 + pf2, 0))
+                    if (regs[0x104 >> 1] & 7) == 0: front_lines[y] = pf1 != 0
                 for x in range(320):
                     px[x, y] = pal[idx[x]]
                 for p in range(nplanes):
@@ -415,7 +420,7 @@ class Amiga:
                             sh = 15 - i
                             c = ((a0 >> sh) & 1) | (((a1 >> sh) & 1) << 1) | (((b0 >> sh) & 1) << 2) | (((b1 >> sh) & 1) << 3)
                             xx = hs - 0x81 + i
-                            if c and 0 <= xx < 320: px[xx, yy] = pal_lines.get(yy, pal)[16 + c]
+                            if c and 0 <= xx < 320 and not (yy in front_lines and front_lines[yy][xx]): px[xx, yy] = pal_lines.get(yy, pal)[16 + c]
                     continue
                 for (sp, vs, ve, hs, ctl), nn in ((o, n + 1), (e, n)):
                     if ve <= vs: continue
