@@ -83,7 +83,21 @@ SPSZ		equ	16+160
 NSPOTS		equ	6
 
 LAPS		equ	4
-TE_SIZE		equ	34	; a track_table entry
+; a track_table entry
+TE_NAME		equ	0
+TE_PAL		equ	4
+TE_WP		equ	8
+TE_SPOTS	equ	12
+TE_MM		equ	16
+TE_GRID		equ	20
+TE_WPR		equ	24
+TE_GRIDR	equ	28
+TE_NWP		equ	32
+TE_MMK		equ	34
+TE_MMX		equ	36
+TE_MMY		equ	38
+TE_LEN		equ	40
+TE_SIZE		equ	42
 
 ;------------------------------------------------------------------------------
 ; race_setup: the track is unpacked; set up cars, pickups, HUD, colours
@@ -95,8 +109,11 @@ race_setup:
 	lea	track_table,a0
 	add.l	d0,a0
 	move.l	a0,trk_ptr
-	move.l	8(a0),wp_ptr
-	move.w	24(a0),nwp
+	move.l	TE_WP(a0),wp_ptr
+	tst.b	race_reverse		; the other way round
+	beq.s	.fw
+	move.l	TE_WPR(a0),wp_ptr
+.fw	move.w	TE_NWP(a0),nwp
 	clr.l	race_step
 	clr.w	race_phase
 	clr.w	fin_count
@@ -122,7 +139,11 @@ race_setup:
 	lea	BBSZ(a1),a1
 	dbf	d0,.zb
 	move.l	trk_ptr,a0
-	move.l	20(a0),a1		; the grid: 4 x (x.l, y.l, a.w)
+	move.l	TE_GRID(a0),a1		; the grid: 4 x (x.l, y.l, a.w)
+	tst.b	race_reverse
+	beq.s	.fg
+	move.l	TE_GRIDR(a0),a1
+.fg
 	lea	cars,a2
 	moveq	#0,d7
 .grid	move.w	d7,C_ID(a2)
@@ -1846,7 +1867,7 @@ hit_car:
 spots_init:
 	movem.l	d0-d7/a0-a2,-(sp)
 	move.l	trk_ptr,a0
-	move.l	12(a0),a1		; spots: x, y, bx, by, wp
+	move.l	TE_SPOTS(a0),a1		; spots: x, y, bx, by, wp, wp the other way round
 	lea	spots,a2
 	moveq	#NSPOTS-1,d7
 .l	move.w	(a1)+,SP_X(a2)
@@ -1854,6 +1875,11 @@ spots_init:
 	move.w	(a1)+,SP_BX(a2)
 	move.w	(a1)+,SP_BY(a2)
 	move.w	(a1)+,SP_WP(a2)
+	move.w	(a1)+,d0
+	tst.b	race_reverse
+	beq.s	.sw
+	move.w	d0,SP_WP(a2)
+.sw
 	clr.w	SP_TYPE(a2)
 	clr.w	SP_T(a2)
 	bsr	random_item
@@ -2194,8 +2220,17 @@ engine_sound:
 ;------------------------------------------------------------------------------
 ; drawing: the camera, the scroll position and the sprites
 ;------------------------------------------------------------------------------
+fx_cycle:	dc.w	$810,$a20,$c40,$e60,$f80,$fa0,$fc2,$ff6,$fff,$ff6,$fc2,$fa0,$f80,$e60,$c40,$a20
+
 race_draw:
 	movem.l	d0-d7/a0-a3,-(sp)
+	; the animated colour 25: zipper arrows, flags, electric plates, camera flashes
+	move.l	framecount,d0
+	lsr.w	#2,d0
+	and.w	#15,d0
+	add.w	d0,d0
+	lea	fx_cycle,a0
+	move.w	(a0,d0.w),cr_col+2+25*4
 	lea	cars,a2
 	; the camera: on your car, looking ahead a little
 	move.w	C_VX(a2),d0
@@ -2407,7 +2442,7 @@ hud_init:
 	bsr	unlz
 	; the minimap: the track line in colour H_MAP (11 = planes 0, 1, 3)
 	move.l	trk_ptr,a0
-	move.l	16(a0),a0
+	move.l	TE_MM(a0),a0
 	lea	hudbm+MM_Y*HUD_RB+3,a1
 	moveq	#35,d1
 .r	moveq	#9,d2
@@ -2730,9 +2765,9 @@ minimap_dots:
 .draw	clr.w	mm_saved
 	lea	mm_save,a3
 	move.l	trk_ptr,a0
-	move.w	26(a0),d5		; scale (8.8)
-	move.w	28(a0),d6		; x offset
-	move.w	30(a0),d4		; y offset
+	move.w	TE_MMK(a0),d5		; scale (8.8)
+	move.w	TE_MMX(a0),d6		; x offset
+	move.w	TE_MMY(a0),d4		; y offset
 	lea	cars+CARSZ*3,a2
 	moveq	#3,d7			; you last (on top)
 .car	move.w	C_SX(a2),d0

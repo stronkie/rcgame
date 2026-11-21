@@ -22,12 +22,14 @@ r_ammo		ds.b	1
 r_erik		ds.b	1	; Engineer Erik's upgrades
 r_ctrl		ds.b	1	; 0: up = gas, 1: fire = gas
 r_points	ds.w	5	; you, Sam, Carla, Max, Erik
-r_best		ds.w	8	; best laps per track (steps)
+r_best		ds.w	10	; best laps per track (steps)
 r_races		ds.w	1
 r_wins		ds.w	1
 r_titles	ds.w	1
 r_trophy	ds.b	3	; per cup: 0 none, 1 gold, 2 silver, 3 bronze
-		ds.b	REC_SIZE-59
+r_unlock	ds.b	1	; bit 0: the secret track, bit 1: the golden car
+r_retro		ds.b	1	; the STRONKIE POCKET screen
+		ds.b	REC_SIZE-65
 rec_load	ds.b	REC_SIZE
 
 ; the race
@@ -70,6 +72,7 @@ blink		ds.w	1
 race_cols	ds.w	16
 race_shared	ds.w	16
 race_weather	ds.b	1	; 0 dry, 1 rain, 2 wind
+race_reverse	ds.b	1	; the track the other way round
 practice	ds.b	1
 paused		ds.b	1
 race_quit	ds.b	1

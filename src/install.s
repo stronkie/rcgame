@@ -155,16 +155,19 @@ ask:	lea	t_where,a0
 	move.l	d0,d1
 	jsr	_LVOUnLock(a6)
 .td	moveq	#1,d7
-	lea	f_track,a0
-	moveq	#7,d6
-.trk	move.l	a0,-(sp)
+	moveq	#9,d6
+.trk	lea	f_track,a0
 	move.l	d6,-(sp)
 	bsr	copy_file
 	move.l	(sp)+,d6
-	move.l	(sp)+,a0
-	addq.b	#1,f_track_n
-	dbf	d6,.trk
+	addq.b	#1,f_track_n		; Track1..Track9, then Track10
+	cmp.b	#'9'+1,f_track_n
+	bne.s	.tn
 	move.b	#'1',f_track_n
+	move.b	#'0',f_track_n+1
+.tn	dbf	d6,.trk
+	move.b	#'1',f_track_n
+	clr.b	f_track_n+1
 	bsr	write_drawer_icon
 	tst.w	errors
 	bne.s	.bad
@@ -406,7 +409,7 @@ f_readme	dc.b	'ReadMe.txt',0
 f_rec		dc.b	'RCTurbo.dat',0
 f_tdir		dc.b	'Tracks',0
 f_track		dc.b	'Tracks/Track'
-f_track_n	dc.b	'1',0
+f_track_n	dc.b	'1',0,0
 t_info		dc.b	'.info',0
 t_dh0		dc.b	'DH0:',0
 t_hello		dc.b	10,$9b,'1m','  RC TURBO CUP - HARD DISK INSTALLER',$9b,'0m',10

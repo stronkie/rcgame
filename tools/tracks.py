@@ -27,6 +27,7 @@ SW, SH = 160, 256                 # surface map
 
 # shared colours (also the colours behind the sprites): 16 black, 20 white, 24 red, 28 yellow
 BLACK, WHITE, RED, YELLOW = 16, 20, 24, 28
+FX = 25                          # cycled every frame by the game: zipper arrows, flags, electric plates, camera flashes
 # theme colour slots 0..15
 (G0, G1, G2, RD, RM, RL, W0, W1, W2, P0, P1, P2, PA, WA0, WA1, SA) = range(16)
 
@@ -39,9 +40,11 @@ THEMES = {
     'school':    [0x444, 0x555, 0x666, 0x222, 0x333, 0x888, 0x721, 0xb42, 0xe86, 0x247, 0x46b, 0x8af, 0x3a4, 0x238, 0x59c, 0xc96],
     'lab':       [0x99a, 0xbbc, 0xdde, 0x223, 0x334, 0x557, 0x456, 0x789, 0xbce, 0x264, 0x4a7, 0x8eb, 0xa5d, 0x2a3, 0x7f5, 0xbb9],
     'building':  [0x753, 0x975, 0xb97, 0x444, 0x666, 0x999, 0x220, 0x542, 0x864, 0x842, 0xb63, 0xd96, 0x37b, 0x346, 0x68a, 0xdb7],
+    'kitchen':   [0xc33, 0xe55, 0xeee, 0x444, 0x666, 0x999, 0x753, 0x975, 0xcb8, 0x26a, 0x48c, 0x9cf, 0x7c3, 0x247, 0x58c, 0xda5],
+    'bathroom':  [0x8ab, 0xbde, 0xeff, 0x335, 0x557, 0x889, 0x89a, 0xbcd, 0xeef, 0xc48, 0xe7a, 0xfbd, 0xfd2, 0x36a, 0x8ce, 0xcb9],
     'arena':     [0x252, 0x373, 0x494, 0x333, 0x444, 0x777, 0x334, 0x667, 0xaab, 0x426, 0x84a, 0xb8d, 0xfa2, 0x247, 0x58c, 0xcb7],
 }
-SHARED = {16: 0x000, 20: 0xfff, 24: 0xd22, 28: 0xfd2}
+SHARED = {16: 0x000, 20: 0xfff, 24: 0xd22, 25: 0xf80, 28: 0xfd2}
 
 def P(*pts): return [tuple(p) for p in pts]
 
@@ -56,6 +59,8 @@ GRIDS = {
     'lab':      [(0,0),(3,0),(3,2),(5,2),(5,0),(7,0),(7,5),(5,5),(5,7),(8,7),(8,10),(3,10),(3,6),(0,6)],
     'building': [(0,0),(4,0),(4,2),(6,2),(6,0),(8,0),(8,6),(5,6),(5,9),(2,9),(2,5),(0,5)],
     'arena':    [(0,0),(5,0),(7,2),(7,4),(4,4),(4,6),(9,6),(9,10),(5,10),(2,7),(0,7)],
+    'kitchen':  [(0,0),(4,0),(4,2),(7,2),(7,6),(5,6),(5,4),(3,4),(3,8),(0,8)],
+    'bathroom': [(0,0),(6,0),(6,3),(4,3),(4,5),(8,5),(8,9),(5,9),(3,7),(0,7)],
 }
 
 def fit(grid):
@@ -96,6 +101,14 @@ TRACKS = [
          extras=[(0.04, 'zip', 0), (0.13, 'oil', 7), (0.24, 'zip', 0), (0.36, 'marble', -6), (0.47, 'ramp', 0), (0.59, 'water', 0),
                  (0.70, 'zip', 0), (0.82, 'oil', -7), (0.93, 'zip', 0)],
          props=['stand', 'flag', 'stand', 'tyres', 'flag']),
+    dict(name='KITCHEN TABLE TROPHY', theme='kitchen', rad=38,
+         extras=[(0.05, 'zip', 0), (0.16, 'oil', 6), (0.28, 'marble', -6), (0.40, 'zip', 0), (0.52, 'ramp', 0), (0.55, 'water', 0),
+                 (0.68, 'bump', 7), (0.80, 'oil', -6), (0.92, 'zip', 0)],
+         props=['plate', 'cup', 'shaker', 'apple', 'cereal']),
+    dict(name='BATHROOM BLITZ', theme='bathroom', rad=40,
+         extras=[(0.05, 'zip', 0), (0.15, 'chem', 6), (0.27, 'water', -6), (0.39, 'zip', 0), (0.51, 'ramp', 0), (0.54, 'water', 0),
+                 (0.66, 'chem', -7), (0.78, 'zip', 0), (0.90, 'water', 7)],
+         props=['soap', 'duck', 'bottle', 'brush', 'sponge']),
 ]
 for _t in TRACKS:
     _t['pts'], _t['scale'] = fit(GRIDS[_t['theme']])
@@ -213,6 +226,13 @@ def ground(theme, wx, wy, rnd):
         g[nz < 0.07] = G0
         g[nz > 0.93] = G2
         g[(((ix // 32) + (iy // 32)) % 3 == 0) & (noise(ix, iy, 32, 1) < 0.2)] = SA
+    elif theme == 'kitchen':        # a gingham table cloth
+        a = (ix // 16) % 2; b = (iy // 16) % 2
+        g[:] = np.where(a & b, G0, np.where(a ^ b, G1, G2))
+        g[((ix % 16) == 8) & ((iy % 4) == 0) & (a ^ b == 1)] = G2
+    elif theme == 'bathroom':       # bathroom tiles
+        g[:] = np.where(((ix // 20) + (iy // 20)) % 2 == 0, G2, G1)
+        g[(ix % 20 == 0) | (iy % 20 == 0)] = G0
     elif theme == 'arena':          # stadium turf
         g[:] = np.where(((ix - iy) // 30) % 2 == 0, G1, G2)
         g[noise(ix, iy, 60) < 0.02] = G0
@@ -292,7 +312,7 @@ def draw_prop(img, kind, cx, cy, rnd):
             for row in range(4):
                 for k in range(16):
                     px = cx - 30 + k * 4 + row * 2; py = cy - h - 4 + row * 3 - k * 2 + 10
-                    d.point((px, py), fill=rnd.choice([RED, YELLOW, WHITE, PA, WA1]))
+                    d.point((px, py), fill=rnd.choice([RED, YELLOW, WHITE, PA, WA1, FX]))
         if kind == 'block':
             d.text((cx - 3, cy - h - 6), rnd.choice('ABCRC'), fill=WHITE)
         return (cx - w - dd, cy - h - (w + dd) // 2, cx + w + dd, cy + (w + dd) // 2)
@@ -357,11 +377,43 @@ def draw_prop(img, kind, cx, cy, rnd):
         d.arc([cx - 14, cy - 30, cx + 14, cy - 2], 0, 180, fill=RED, width=6)
         d.rectangle([cx - 14, cy - 18, cx - 9, cy - 10], fill=W2); d.rectangle([cx + 9, cy - 18, cx + 14, cy - 10], fill=W2)
         return (cx - 15, cy - 31, cx + 15, cy)
+    if kind == 'plate':
+        d.ellipse([cx - 22, cy - 11, cx + 22, cy + 11], fill=WHITE, outline=BLACK)
+        d.ellipse([cx - 14, cy - 7, cx + 14, cy + 7], fill=W2)
+        d.ellipse([cx - 6, cy - 5, cx + 6, cy + 3], fill=PA, outline=BLACK)
+        return (cx - 23, cy - 12, cx + 23, cy + 12)
+    if kind == 'cup':
+        draw_cyl(img, cx, cy, 10, 18, W0, WHITE, W2); d.arc([cx + 7, cy - 15, cx + 17, cy - 5], 270, 90, fill=WHITE, width=3)
+        return (cx - 11, cy - 25, cx + 18, cy + 5)
+    if kind == 'shaker':
+        draw_cyl(img, cx, cy, 6, 22, W2, WHITE, W2); draw_cyl(img, cx, cy - 22, 6, 4, RM, RL if False else RM, RD)
+        return (cx - 7, cy - 32, cx + 7, cy + 3)
+    if kind == 'apple':
+        d.ellipse([cx - 11, cy - 20, cx + 11, cy], fill=RED, outline=BLACK); d.ellipse([cx - 6, cy - 16, cx - 1, cy - 11], fill=WHITE)
+        d.line([cx, cy - 20, cx + 2, cy - 26], fill=W0, width=2); d.ellipse([cx + 2, cy - 27, cx + 9, cy - 22], fill=PA)
+        return (cx - 12, cy - 28, cx + 12, cy + 1)
+    if kind == 'cereal':
+        draw_box(img, cx, cy, 30, 10, 40, YELLOW, P1, P0)
+        d.text((cx - 10, cy - 30), 'RC', fill=WHITE)
+        return (cx - 42, cy - 62, cx + 42, cy + 22)
+    if kind == 'soap':
+        draw_box(img, cx, cy, 26, 16, 8, P2, P1, P0)
+        return (cx - 42, cy - 30, cx + 42, cy + 22)
+    if kind == 'bottle':
+        draw_cyl(img, cx, cy, 9, 28, P2, P1, P0); draw_cyl(img, cx, cy - 28, 4, 8, WHITE, W2, W1)
+        return (cx - 10, cy - 42, cx + 10, cy + 5)
+    if kind == 'brush':
+        d.line([cx - 22, cy + 4, cx + 18, cy - 12], fill=WA1, width=4); d.line([cx + 10, cy - 14, cx + 22, cy - 19], fill=WHITE, width=5)
+        return (cx - 24, cy - 22, cx + 24, cy + 7)
+    if kind == 'sponge':
+        draw_box(img, cx, cy, 24, 18, 10, YELLOW, PA, YELLOW)
+        for k in range(5): d.point((cx - 8 + k * 4, cy - 12 + (k % 2) * 3), fill=PA)
+        return (cx - 42, cy - 32, cx + 42, cy + 22)
     if kind == 'flag':
         d.line([cx, cy, cx, cy - 36], fill=WHITE, width=1)
         for k in range(4):
             for j in range(3):
-                d.rectangle([cx + 1 + k * 4, cy - 36 + j * 4 + k, cx + 4 + k * 4, cy - 33 + j * 4 + k], fill=BLACK if (k + j) % 2 else WHITE)
+                d.rectangle([cx + 1 + k * 4, cy - 36 + j * 4 + k, cx + 4 + k * 4, cy - 33 + j * 4 + k], fill=BLACK if (k + j) % 2 else FX)
         return (cx - 1, cy - 37, cx + 18, cy + 1)
     return (cx, cy, cx, cy)
 
@@ -427,7 +479,7 @@ def render(tr, seed=0):
             m = road & (np.abs(ds) < 9) & (np.abs(LAT - off) < 13)
             img[m] = YELLOW
             arrow = m & (np.abs(LAT - off) < 9) & ((((ds + 9) % 9) - np.abs(LAT - off) * 0.5) > 3) & ((((ds + 9) % 9) - np.abs(LAT - off) * 0.5) < 6)
-            img[arrow] = RED
+            img[arrow] = FX
             surf[m] = SURF_ZIP
         elif kind in ('oil', 'chem'):
             rr = np.sqrt((ds * 0.8) ** 2 + (LAT - off) ** 2)
@@ -471,7 +523,7 @@ def render(tr, seed=0):
                 surf[road & (rr < 6)] = SURF_BUMP
         elif kind == 'zap':         # electric plates
             m = road & (np.abs(ds) < 7) & (np.abs(LAT - off) < 9)
-            img[m] = np.where(((np.floor(wx) + np.floor(wy)) % 4) < 2, WA1, W2)[m]
+            img[m] = np.where(((np.floor(wx) + np.floor(wy)) % 4) < 2, FX, W2)[m]
             img[m & ((np.abs(ds) > 6) | (np.abs(LAT - off) > 8))] = BLACK
             surf[m] = SURF_ZAP
         elif kind == 'ramp':        # a wedge across the road, rising in the race direction
@@ -506,6 +558,10 @@ def render(tr, seed=0):
                 col = np.where(((sv // 8).astype(int) + (h // 5)) % 2 == 0, RED, WHITE).astype(np.uint8)
             elif theme == 'lab':
                 col = np.where(h % 4 == 0, W2, W1).astype(np.uint8)
+            elif theme == 'kitchen':                         # bread loaf slices
+                col = np.where((sv % 7) < 1, W0, np.where(h > 6, W2, W1)).astype(np.uint8)
+            elif theme == 'bathroom':                        # tiled kerb
+                col = np.where(((sv // 5).astype(int) + h // 4) % 2 == 0, W2, W1).astype(np.uint8)
             elif theme == 'garden':
                 col = np.where((sv % 9) < 1, W0, np.where(h < 3, W0, W1)).astype(np.uint8)
             img[yy, xs] = col
@@ -515,7 +571,7 @@ def render(tr, seed=0):
     occupied = (D <= R + KERB + WALL + 2) | CUT
     pim = Image.fromarray(img)
     tries = 0; placed = []
-    while tries < 900 and len(placed) < tr.get('nprops', 26):
+    while tries < 900 and len(placed) < tr.get('nprops', 19):
         tries += 1
         X = rnd.randint(20, WW - 20); Y = rnd.randint(40, WH - 6)
         if occupied[Y, X]: continue

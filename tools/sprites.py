@@ -280,6 +280,7 @@ def render_car15(design, k, cage=False, ss=6, scale=None, size=16, anchor=None):
     o = np.zeros_like(m)
     o[1:, :] |= m[:-1, :]; o[:-1, :] |= m[1:, :]; o[:, 1:] |= m[:, :-1]; o[:, :-1] |= m[:, 1:]
     out[o & ~m] = OUT
+    out[out == GREY] = WHITE        # (colour 25 is the game's flashing colour now)
     return out
 
 def car15_bytes(arr):

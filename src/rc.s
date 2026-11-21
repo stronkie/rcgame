@@ -29,6 +29,7 @@ SCR_SIZE	equ	SCR_RB*256
 SURF_SIZE	equ	SURF_W*SURF_H
 SPRBUF		equ	4+CAR_H*4+4		; one sprite buffer: pos, ctl, rows, end
 REC_SIZE	equ	128
+NRACES		equ	9			; races in a cup (track 10 is the secret one)
 
 ; actions (bits in act: presses, and in held: held down)
 A_FIRE		equ	0

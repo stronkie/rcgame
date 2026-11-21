@@ -289,7 +289,7 @@ def main():
     adf.addfile(880, 'Disk.info', disk_icon)
     tdir = adf.mkdir(880, 'Tracks')
     tracks = []
-    for i in range(1, int(os.environ.get('DISK_TRACKS', '8')) + 1):
+    for i in range(1, int(os.environ.get('DISK_TRACKS', '10')) + 1):
         t = open(os.path.join(ROOT, 'build', 'gen', 'Track%d' % i), 'rb').read(); tracks.append(t)
         adf.addfile(tdir, 'Track%d' % i, t)
     s = adf.mkdir(880, 'S')

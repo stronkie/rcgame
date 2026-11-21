@@ -306,6 +306,17 @@ st_intro_in:
 	moveq	#0,d0
 	move.b	r_race,d0
 	move.w	d0,cur_track
+	; National Cup: the tracks the other way round; World: every second race
+	clr.b	race_reverse
+	cmp.b	#1,r_cup
+	bne.s	.nr
+	st	race_reverse
+.nr	cmp.b	#2,r_cup
+	bne.s	.wr
+	btst	#0,r_race
+	beq.s	.wr
+	st	race_reverse
+.wr
 	bsr	choose_drivers
 	bsr	choose_weather
 	bsr	show_menu_bg
@@ -394,7 +405,11 @@ draw_track_info:
 	lea	weather_names,a0
 	move.l	(a0,d0.w),a0
 	bsr	str_add
-	bsr	str_end
+	tst.b	race_reverse
+	beq.s	.nrv
+	lea	str_reverse,a0
+	bsr	str_add
+.nrv	bsr	str_end
 	moveq	#80,d1
 	moveq	#M_LBLUE,d2
 	bsr	mctext
@@ -638,7 +653,7 @@ load_track:
 	beq.s	.done
 	move.l	d0,a6
 	move.w	cur_track,d1
-	mulu	#14,d1
+	mulu	#16,d1
 	add.l	#track_files,d1
 	move.l	#1005,d2
 	jsr	_LVOOpen(a6)
@@ -894,7 +909,7 @@ st_results:
 	blo.s	.full
 	lea	st_demoend_in,a0
 	bra	set_state
-.full	cmp.b	#8,r_race
+.full	cmp.b	#NRACES,r_race
 	blo.s	.shop
 	lea	st_cupend_in,a0
 	bra	set_state
@@ -1332,14 +1347,34 @@ st_demoend_in:
 	bra	set_state
 
 ;------------------------------------------------------------------------------
+; wrap_track: d0 = track (may be -1 or too high) -> a track you may choose:
+; 1-9, the secret 10th once unlocked, only 1-2 in the demo
+wrap_track:
+	movem.l	d1,-(sp)
+	moveq	#NRACES,d1
+	btst	#0,r_unlock
+	beq.s	.n
+	moveq	#NTRACKS,d1
+.n	tst.b	demo_flag
+	beq.s	.d
+	moveq	#2,d1
+.d	tst.w	d0
+	bpl.s	.p
+	add.w	d1,d0
+.p	cmp.w	d1,d0
+	blo.s	.x
+	moveq	#0,d0
+.x	movem.l	(sp)+,d1
+	rts
+
+;------------------------------------------------------------------------------
 ; practice: any track, no money
 ;------------------------------------------------------------------------------
 st_practice_in:
 	st	practice
-	tst.b	demo_flag
-	beq.s	.f
-	and.w	#1,cur_track
-.f
+	move.w	cur_track,d0
+	bsr	wrap_track
+	move.w	d0,cur_track
 	clr.b	race_weather
 	clr.w	wind_x
 	clr.w	wind_y
@@ -1394,11 +1429,8 @@ st_practice:
 .c	tst.w	d0
 	beq.s	.f
 	add.w	cur_track,d0
-	and.w	#7,d0
-	tst.b	demo_flag
-	beq.s	.all
-	and.w	#1,d0
-.all	move.w	d0,cur_track
+	bsr	wrap_track
+	move.w	d0,cur_track
 	moveq	#S_CLICK,d0
 	bsr	sfx
 	bsr	draw_practice
@@ -1435,7 +1467,7 @@ load_records:
 	jsr	_LVOClose(a6)
 	cmp.l	#REC_SIZE,d5
 	bne.s	.none
-	cmp.l	#'RCT1',rec_load
+	cmp.l	#'RCT2',rec_load
 	bne.s	.none
 	lea	rec_load,a0
 	lea	records,a1
@@ -1451,7 +1483,7 @@ save_records:
 	bra.s	.go
 .demo	rts
 .go	movem.l	d0-d7/a0-a6,-(sp)
-	move.l	#'RCT1',records
+	move.l	#'RCT2',records
 	bsr	os_on
 	move.l	dosbase,d0
 	beq.s	.fail
@@ -1532,7 +1564,8 @@ howto_text
 	dc.b	'SPEND PRIZE MONEY IN THE SHOP.',0
 	dc.b	0
 str_race	dc.b	' - RACE ',0
-str_of8		dc.b	' OF 8',0
+str_of8		dc.b	' OF 9',0
+str_reverse	dc.b	' - BACKWARDS!',0
 str_track	dc.b	'TRACK ',0
 str_weather	dc.b	'WEATHER: ',0
 str_bestlap	dc.b	'BEST LAP: ',0

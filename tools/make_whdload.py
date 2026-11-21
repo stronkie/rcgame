@@ -5,7 +5,7 @@
       RCTurboCup.info                    project icon: WHDLoad, SLAVE=..., PRELOAD
       ReadMe / ReadMe.info
       data/RCTurbo.game                  the game (the career is saved here too)
-      data/Tracks/Track1..8              the tracks
+      data/Tracks/Track1..10             the tracks
   build/whdload/RCTurboCup.info          drawer icon
   build/RCTurboCup_V<ver>_WHDLoad.lha    all of it (LhA level 2, stored)
   build/RCTurboCup_V<ver>_WHDLoad.zip    the same as a zip
@@ -141,7 +141,7 @@ def main():
         PKG + '.info': md.diskobject(2, md.drawer_image()),
     }
     os.makedirs(os.path.join(pkg, 'data', 'Tracks'))
-    for i in range(1, int(os.environ.get('WHD_TRACKS', '8')) + 1):
+    for i in range(1, int(os.environ.get('WHD_TRACKS', '10')) + 1):
         files[PKG + '/data/Tracks/Track%d' % i] = open(os.path.join(GEN, 'Track%d' % i), 'rb').read()
     for n, d in files.items():
         open(os.path.join(root, n), 'wb').write(d)
