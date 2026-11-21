@@ -106,6 +106,7 @@ Source: `src/main.s` (the full game) and `src/demo.s` (the demo) include `src/rc
 - The game is now called **Stronkie's RC Cup**: new title logo, loading picture, menus, manual, box and labels
 - New file names: StronkiesRCCup_V0.5.adf, the drawer StronkiesRCCup, the game RCCup (your career is now RCCup.dat)
 - STRONKIE POCKET: a simple 4 shade grey screen like the old handhelds - a white road, a flat grey ground, black and white kerbs, walls and props in 3 shades, light grey cars with black outlines
+- STRONKIE POCKET: the big texts (LAP 2, FINAL LAP! ...) are black with a white outline and no longer flicker; the pickups are black and white and easy to read
 
 ### V0.4 - TEST VERSION - 21 November 2026
 - Two new tracks: the Kitchen Table Trophy (in the cups) and the Bathroom Blitz (secret)

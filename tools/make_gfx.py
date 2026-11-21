@@ -239,25 +239,25 @@ def ovl_lights(lit, go=False):
 
 def overlays():
     imgs = []
-    for k in range(4): imgs.append((ovl_lights(k), (16, 21, 24), 16))
-    imgs.append((ovl_lights(3, True), (16, 21, 28), 16))
-    for t, c2, c3 in OVL_TEXTS: imgs.append((ovl_text(t), (16, c2, c3), 64))
+    for k in range(4): imgs.append((ovl_lights(k), (16, 21, 24), 16, (10, 2, 0)))
+    imgs.append((ovl_lights(3, True), (16, 21, 28), 16, (10, 2, 0)))
+    for t, c2, c3 in OVL_TEXTS: imgs.append((ovl_text(t), (16, c2, c3), 64, (0, 10, 8)))   # retro: black letters, white outline
     blob = bytearray(); offs = []
-    for i, (a, cols, y) in enumerate(imgs):
+    for i, (a, cols, y, rcols) in enumerate(imgs):
         h, w = a.shape
         ww = (w + 15) // 16
         b = np.zeros((h, ww * 16), np.uint8); b[:, :w] = a
         offs.append(len(blob))
-        blob += struct.pack('>6H', ww, h, y, cols[0], cols[1], cols[2])
+        blob += struct.pack('>9H', ww, h, y, cols[0], cols[1], cols[2], rcols[0], rcols[1], rcols[2])
         for row in b:
             blob += np.packbits(row & 1).tobytes() + np.packbits(row >> 1 & 1).tobytes()
     open(os.path.join(OUT, 'ovl.lz'), 'wb').write(lz.pack(bytes(blob)))
     L = ['OVL_RAW\tequ\t%d' % len(blob), 'ovl_table:\tdc.l\t' + ','.join(str(o) for o in offs),
          'ovl_lz:\tincbin\t"ovl.lz"']
     eq = '\n'.join('%s\t\tequ\t%d' % (n, i) for i, n in enumerate(OVL_NAMES))
-    prev = Image.new('P', (240, sum(a.shape[0] + 4 for a, c, y in imgs)), 0)
+    prev = Image.new('P', (240, sum(a.shape[0] + 4 for a, c, y, r in imgs)), 0)
     y0 = 0
-    for a, cols, y in imgs:
+    for a, cols, y, rcols in imgs:
         q = np.where(a == 0, 0, np.array([0] + list(cols))[a]).astype(np.uint8)
         prev.paste(Image.fromarray(q), (0, y0)); y0 += a.shape[0] + 4
     prev = Image.fromarray(np.where(np.array(prev) == 0, 25, np.array(prev)).astype(np.uint8))
@@ -409,6 +409,21 @@ def icon(name):
     mask = (a != 255)
     a = np.where(mask, a, 0).astype(np.uint8)
     return a, mask
+
+RETRO_IDX = {0: 0, 1: 2, 2: 8, 3: 10}       # shade -> the colour number that shows it in playfield 2
+def icons_retro():
+    """the pickups for the STRONKIE POCKET: black and white, easy to read"""
+    data = bytearray()
+    for n in ICONS:
+        a, m = icon(n)
+        letter = len(n) == 1
+        sh = {K: 3, W: 0 if letter else 1, Y: 0, RD: 3}
+        r = np.zeros_like(a)
+        for c, s_ in sh.items(): r[(a == c) & m] = RETRO_IDX[s_]
+        for y in range(16):
+            for p in range(5):
+                data += np.packbits((r[y] >> p) & 1).tobytes()
+    return bytes(data)
 
 def icons_data():
     data = bytearray(); masks = bytearray()
@@ -818,6 +833,7 @@ def main():
     open(os.path.join(OUT, 'wbob.bin'), 'wb').write(weapon_bobs())
     ic, im_, iprev = icons_data()
     open(os.path.join(OUT, 'icons.bin'), 'wb').write(ic); open(os.path.join(OUT, 'iconmask.bin'), 'wb').write(im_)
+    open(os.path.join(OUT, 'iconretro.bin'), 'wb').write(icons_retro())
     sp = shared_pal()
     save_prev(iprev, [0] * 16 + sp[16:], 'preview_icons.png', 4)
     hud = hud_image()
@@ -879,7 +895,7 @@ def main():
     L.append('snd_null:\tdc.w\t0,0')
     L.append('\tsection\tgfx,data')
     L.append('cars_gfx:\tincbin\t"cars.bin"\nwbob_gfx:\tincbin\t"wbob.bin"')
-    L.append('icons_gfx:\tincbin\t"icons.bin"\nicons_mask:\tincbin\t"iconmask.bin"')
+    L.append('icons_gfx:\tincbin\t"icons.bin"\nicons_mask:\tincbin\t"iconmask.bin"\nicons_retro:\tincbin\t"iconretro.bin"')
     L.append('hud_lz:\tincbin\t"hud.lz"\n\teven\ntitle_lz:\tincbin\t"title.lz"\n\teven\nmenu_lz:\tincbin\t"menu.lz"\n\teven')
     L.append('font8:\tincbin\t"font8.bin"')
     L.append(ovl_asm)

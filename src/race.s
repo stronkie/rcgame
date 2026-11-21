@@ -2031,7 +2031,10 @@ spot_show:
 	move.w	d0,d1
 	mulu	#160,d0
 	lea	icons_gfx,a3		; 16 rows x 5 planes x 2 bytes
-	add.l	d0,a3
+	tst.b	r_retro
+	beq.s	.ni
+	lea	icons_retro,a3		; (the handheld: black and white ones)
+.ni	add.l	d0,a3
 	lsl.w	#5,d1
 	lea	icons_mask,a0
 	add.w	d1,a0			; 16 rows x 2 bytes
@@ -2637,7 +2640,17 @@ hide_ovl:
 ovl_restore:
 	tst.b	ovl_drawn
 	beq.s	.x
-	movem.l	a5,-(sp)
+	movem.l	d0-d1/a5,-(sp)
+	; no flicker: take it away only when the beam has passed it, it is back
+	; (drawn at the end of the step) before the beam comes round again
+	move.w	ovl_y,d1
+	add.w	ovl_h,d1
+	add.w	#$2c+2,d1
+.beam	move.l	CUSTOM+4,d0		; VPOSR/VHPOSR -> the line
+	lsr.l	#8,d0
+	and.w	#$1ff,d0
+	cmp.w	d1,d0
+	blo.s	.beam
 	clr.b	ovl_drawn
 	bsr	wait_blit
 	lea	CUSTOM,a5
@@ -2649,7 +2662,7 @@ ovl_restore:
 	move.w	ovl_dmod,$66(a5)
 	move.w	ovl_size,$58(a5)
 	bsr	wait_blit
-	movem.l	(sp)+,a5
+	movem.l	(sp)+,d0-d1/a5
 .x	rts
 
 ovl_draw:
@@ -2742,18 +2755,12 @@ ovl_build:
 	move.w	(a0)+,d2		; the 3 colours
 	move.w	(a0)+,d3
 	move.w	(a0)+,d4
-	tst.b	r_retro			; (the handheld: colours that give the shades)
+	tst.b	r_retro			; the handheld: its own 3 (black letters, white outline)
 	beq.s	.nr
-	move.w	d2,d0
-	bsr	retro_ovl
-	move.w	d0,d2
-	move.w	d3,d0
-	bsr	retro_ovl
-	move.w	d0,d3
-	move.w	d4,d0
-	bsr	retro_ovl
-	move.w	d0,d4
-.nr
+	move.w	(a0),d2
+	move.w	2(a0),d3
+	move.w	4(a0),d4
+.nr	addq.l	#6,a0
 	lea	ovl_img,a1
 	lea	ovl_msk,a2
 	subq.w	#1,d7
