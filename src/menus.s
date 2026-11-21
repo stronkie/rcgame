@@ -420,6 +420,7 @@ st_back_title:
 ;------------------------------------------------------------------------------
 st_intro_in:
 	clr.b	practice
+	clr.b	ttrial
 	moveq	#0,d0
 	move.b	r_race,d0
 	move.w	d0,cur_track
@@ -1550,10 +1551,22 @@ draw_practice:
 	moveq	#1,d0
 	moveq	#60,d1
 	moveq	#38,d2
-	moveq	#48,d3
+	moveq	#60,d3
 	moveq	#M_BG,d4
 	bsr	fill_rect
 	bsr	draw_track_info
+	bsr	str_start		; the mode: race / backwards / time trial
+	lea	str_mode,a0
+	bsr	str_add
+	move.w	prac_mode,d0
+	lsl.w	#2,d0
+	lea	mode_names,a0
+	move.l	(a0,d0.w),a0
+	bsr	str_add
+	bsr	str_end
+	move.w	#112,d1
+	moveq	#M_YELLOW,d2
+	bsr	mctext
 	lea	str_prachint,a0
 	move.w	#130,d1
 	moveq	#M_LBLUE,d2
@@ -1581,17 +1594,39 @@ st_practice:
 	beq.s	.c
 	moveq	#1,d0
 .c	tst.w	d0
-	beq.s	.f
+	beq.s	.ud
 	add.w	cur_track,d0
 	bsr	wrap_track
 	move.w	d0,cur_track
-	moveq	#S_CLICK,d0
+.clk	moveq	#S_CLICK,d0
 	bsr	sfx
 	bsr	draw_practice
 	rts
+.ud	btst	#A_UP,d1		; up / down: the mode
+	beq.s	.dn
+	subq.w	#1,prac_mode
+	bpl.s	.clk
+	move.w	#2,prac_mode
+	bra.s	.clk
+.dn	btst	#A_DOWN,d1
+	beq.s	.f
+	addq.w	#1,prac_mode
+	cmp.w	#3,prac_mode
+	blo.s	.clk
+	clr.w	prac_mode
+	bra.s	.clk
 .f	bsr	fire_pressed
-	beq.s	.x
-	move.w	cur_track,d0
+	beq	.x
+	clr.b	race_reverse
+	clr.b	ttrial
+	cmp.w	#1,prac_mode
+	bne.s	.m2
+	st	race_reverse
+.m2	cmp.w	#2,prac_mode
+	bne.s	.m3
+	st	ttrial
+	bsr	ghost_load
+.m3	move.w	cur_track,d0
 	lsr.w	#1,d0
 	and.w	#3,d0
 	add.w	#SONG_RACE1,d0
@@ -1599,6 +1634,157 @@ st_practice:
 	bra	start_race
 .x	rts
 
+
+;------------------------------------------------------------------------------
+; the time trial: the ghost on disk (RCGhost0..9), the end screen
+;------------------------------------------------------------------------------
+ghost_load:
+	movem.l	d0-d7/a0-a6,-(sp)
+	clr.w	gh_best_t
+	clr.b	gh_new
+	move.w	cur_track,d0
+	add.b	#'0',d0
+	move.b	d0,ghost_name+7
+	bsr	os_on
+	move.l	dosbase,d0
+	beq.s	.x
+	move.l	d0,a6
+	move.l	#ghost_name,d1
+	move.l	#1005,d2
+	jsr	_LVOOpen(a6)
+	move.l	d0,d4
+	beq.s	.x
+	move.l	d4,d1
+	move.l	#gh_file,d2
+	move.l	#8+GH_MAX*6,d3
+	jsr	_LVORead(a6)
+	move.l	d4,d1
+	jsr	_LVOClose(a6)
+	cmp.l	#'RCG1',gh_file		; is it a good one, for this track?
+	bne.s	.bad
+	move.w	gh_track,d0
+	cmp.w	cur_track,d0
+	bne.s	.bad
+	cmp.w	#GH_MAX,gh_best_t
+	blo.s	.x
+.bad	clr.w	gh_best_t
+.x	bsr	os_off
+	movem.l	(sp)+,d0-d7/a0-a6
+	rts
+
+ghost_save:
+	tst.b	demo_flag		; the demo saves nothing
+	bne	.r
+	movem.l	d0-d7/a0-a6,-(sp)
+	move.l	#'RCG1',gh_file
+	move.w	cur_track,gh_track
+	move.w	cur_track,d0
+	add.b	#'0',d0
+	move.b	d0,ghost_name+7
+	bsr	os_on
+	move.l	dosbase,d0
+	beq.s	.x
+	move.l	d0,a6
+	move.l	#ghost_name,d1
+	move.l	#1006,d2
+	jsr	_LVOOpen(a6)
+	move.l	d0,d4
+	beq.s	.x
+	move.l	d4,d1
+	move.l	#gh_file,d2
+	moveq	#0,d3
+	move.w	gh_best_t,d3
+	mulu	#6,d3
+	addq.l	#8,d3
+	jsr	_LVOWrite(a6)
+	move.l	d4,d1
+	jsr	_LVOClose(a6)
+	tst.b	whd_mode
+	bne.s	.x
+	moveq	#25,d1			; let the disk finish
+	jsr	_LVODelay(a6)
+.x	bsr	os_off
+	movem.l	(sp)+,d0-d7/a0-a6
+.r	rts
+
+st_ttend_in:
+	bsr	show_menu_bg
+	lea	str_tt_h,a0
+	bsr	header
+	bsr	str_start		; the track
+	move.w	cur_track,d0
+	mulu	#TE_SIZE,d0
+	lea	track_table,a0
+	move.l	(a0,d0.l),a0
+	bsr	str_add
+	bsr	str_end
+	moveq	#64,d1
+	moveq	#M_WHITE,d2
+	bsr	mctext
+	bsr	str_start		; your best lap
+	lea	str_tt_best,a0
+	bsr	str_add
+	move.w	cars+C_BEST,d0
+	cmp.w	#9999,d0
+	beq.s	.nl
+	bsr	str_time
+	bra.s	.bl
+.nl	moveq	#'-',d0
+	bsr	str_char
+.bl	bsr	str_end
+	moveq	#96,d1
+	moveq	#M_YELLOW,d2
+	bsr	mctext
+	tst.w	gh_best_t		; the ghost
+	beq.s	.ng
+	bsr	str_start
+	lea	str_tt_ghost,a0
+	bsr	str_add
+	move.w	gh_best_t,d0
+	bsr	str_time
+	bsr	str_end
+	moveq	#112,d1
+	moveq	#M_LBLUE,d2
+	bsr	mctext
+.ng	lea	str_tt_beat,a0
+	tst.b	gh_new
+	beq.s	.nn
+	bsr	ghost_save
+	lea	str_tt_saved,a0
+.nn	move.w	#144,d1
+	moveq	#M_GREEN,d2
+	bsr	mctext
+	; the best lap ever on this track
+	move.w	cur_track,d1
+	add.w	d1,d1
+	lea	r_best,a0
+	move.w	cars+C_BEST,d2
+	cmp.w	#9999,d2
+	beq.s	.nb
+	tst.w	(a0,d1.w)
+	beq.s	.sb
+	cmp.w	(a0,d1.w),d2
+	bhs.s	.nb
+.sb	move.w	d2,(a0,d1.w)
+	bsr	save_records
+.nb	lea	str_tt_fire,a0
+	move.w	#240,d1
+	moveq	#M_LBLUE,d2
+	bsr	mctext
+	moveq	#SONG_WIN,d0
+	moveq	#48,d1
+	bsr	play_song
+	lea	st_ttend,a0
+	bra	set_state
+
+st_ttend:
+	bsr	fire_pressed
+	bne.s	.b
+	btst	#A_ESC,act+1
+	beq.s	.x
+.b	lea	st_practice_in,a0
+	bra	set_state
+.x	rts
 ;------------------------------------------------------------------------------
 ; the career on disk: RCTurbo.dat
 ;------------------------------------------------------------------------------
@@ -1757,7 +1943,20 @@ str_gameover	dc.b	'GAME OVER',0
 str_gameover2	dc.b	'NO SPARE CARS LEFT.',0
 str_gameover3	dc.b	'THE CAREER IS OVER - TRY AGAIN!',0
 str_practice	dc.b	'PRACTICE',0
-str_prachint	dc.b	'{ LEFT/RIGHT: TRACK }',0
+str_mode	dc.b	'MODE: ',0
+	even
+mode_names	dc.l	mn_race,mn_back,mn_tt
+mn_race		dc.b	'RACE',0
+mn_back		dc.b	'RACE BACKWARDS',0
+mn_tt		dc.b	'TIME TRIAL (GHOST)',0
+str_tt_h	dc.b	'TIME TRIAL',0
+str_tt_best	dc.b	'YOUR BEST LAP: ',0
+str_tt_ghost	dc.b	'THE GHOST LAP: ',0
+str_tt_saved	dc.b	'NEW GHOST SAVED!',0
+str_tt_beat	dc.b	'BEAT THE GHOST NEXT TIME!',0
+str_tt_fire	dc.b	'FIRE: BACK TO PRACTICE',0
+ghost_name	dc.b	'RCGhost0',0
+str_prachint	dc.b	'{ } TRACK    ^ ` MODE',0
 str_prachint2	dc.b	'FIRE: RACE   ESC: TITLE',0
 champ_text
 	dc.b	'YOU WON ALL THREE CUPS!',0

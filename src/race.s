@@ -54,6 +54,7 @@ C_TOTAL		equ	98	; .l race time (steps)
 C_STUCK		equ	102
 C_REV		equ	104
 C_BAND		equ	106	; rubber band: top speed change
+C_OFF		equ	108	; not in this race (time trial)
 CARSZ		equ	128
 
 ; a weapon in flight (one per car)
@@ -154,7 +155,10 @@ race_setup:
 .grid	move.w	d7,C_ID(a2)
 	; the grid place: you start last, the computer cars in front
 	moveq	#3,d0
-	tst.w	d7
+	tst.b	ttrial			; (time trial: alone, at the front)
+	beq.s	.gt
+	moveq	#0,d0
+.gt	tst.w	d7
 	beq.s	.gp
 	move.w	d7,d0
 	subq.w	#1,d0
@@ -174,10 +178,29 @@ race_setup:
 	move.w	#-7,cars+CARSZ+C_LANE
 	move.w	#0,cars+CARSZ*2+C_LANE
 	move.w	#7,cars+CARSZ*3+C_LANE
-	; colours: the track, the weather, the car paints
+	tst.b	ttrial			; time trial: the others stay at home
+	beq.s	.tr
+	lea	cars+CARSZ,a2
+	moveq	#2,d7
+.off	move.w	#1,C_OFF(a2)
+	move.l	#$c0000000,C_PROG(a2)
+	move.w	#-2000,C_SX(a2)
+	move.w	#-2000,C_SY(a2)
+	lea	CARSZ(a2),a2
+	dbf	d7,.off
+.tr	; colours: the track, the weather, the car paints
 	bsr	race_palette
 	; pickups and HUD
-	bsr	spots_init
+	tst.b	ttrial			; (no pickups in a time trial)
+	beq.s	.sp
+	lea	spots,a1
+	moveq	#NSPOTS-1,d0
+.cs	clr.w	SP_TYPE(a1)
+	lea	SPSZ(a1),a1
+	dbf	d0,.cs
+	bra.s	.sp2
+.sp	bsr	spots_init
+.sp2
 	bsr	hud_init
 	; camera on your car
 	lea	cars,a2
@@ -370,7 +393,10 @@ race_palette:
 	addq.w	#1,d1
 	cmp.w	#3,d1
 	blo.s	.p
-	movem.l	(sp)+,d0-d4/a0-a1
+	tst.b	ttrial			; the ghost: pale blue
+	beq.s	.ng
+	move.l	#$06890bcf,race_shared+12
+.ng	movem.l	(sp)+,d0-d4/a0-a1
 	rts
 
 race_colours_on:
@@ -427,7 +453,9 @@ do_step:
 	bsr	bobs_restore
 	lea	cars,a2
 	moveq	#3,d7
-.cars	tst.w	C_PERS(a2)
+.cars	tst.w	C_OFF(a2)
+	bne.s	.skip
+	tst.w	C_PERS(a2)
 	bpl.s	.ai
 	cmp.w	#2,race_phase
 	beq.s	.ai			; after the finish the computer drives your car
@@ -436,11 +464,15 @@ do_step:
 .ai	bsr	ai_drive
 .phys	bsr	car_physics
 	bsr	car_progress
-	lea	CARSZ(a2),a2
+.skip	lea	CARSZ(a2),a2
 	dbf	d7,.cars
-	bsr	car_collisions
-	bsr	weapons_update
+	tst.b	ttrial
+	beq.s	.nt
+	bsr	ghost_record
+	bra.s	.tt
+.nt	bsr	car_collisions
 	bsr	spots_update
+.tt	bsr	weapons_update
 	bsr	rank_cars
 	bsr	engine_sound
 	bsr	hud_update
@@ -500,7 +532,10 @@ race_over:
 	clr.w	eng_vol
 	bsr	rank_cars
 	lea	st_results_in,a0
-	bra	set_state
+	tst.b	ttrial
+	beq.s	.r
+	lea	st_ttend_in,a0
+.r	bra	set_state
 
 ;------------------------------------------------------------------------------
 ; your controls
@@ -1520,6 +1555,12 @@ lap_done:
 	movem.l	d0-d1/a0,-(sp)
 	move.w	C_LAPT(a2),d0
 	move.w	d0,lap_last
+	tst.b	ttrial
+	beq.s	.ng
+	tst.w	C_PERS(a2)
+	bpl.s	.ng
+	bsr	ghost_lap
+.ng
 	cmp.w	C_BEST(a2),d0
 	bhs.s	.nb
 	move.w	d0,C_BEST(a2)
@@ -1683,6 +1724,8 @@ car_collisions:
 ;------------------------------------------------------------------------------
 ; fire_weapon: car a2 uses its weapon
 fire_weapon:
+	tst.b	ttrial			; (nothing to shoot at in a time trial)
+	bne	.ttx
 	movem.l	d0-d4/a3,-(sp)
 	tst.w	C_AMMO(a2)
 	beq	.x
@@ -1740,7 +1783,7 @@ fire_weapon:
 	bne.s	.x
 	clr.w	C_WEAP(a2)
 .x	movem.l	(sp)+,d0-d4/a3
-	rts
+.ttx	rts
 
 ; homing_target: the car just ahead of a2 (by place) -> W_TGT(a3)
 homing_target:
@@ -2299,7 +2342,18 @@ race_draw:
 	; the cars: attached sprite pairs (0+1, 2+3, 4+5, 6+7)
 	moveq	#0,d7
 .car	move.w	d7,d3
-	tst.w	C_SHLD(a2)		; the shield: blinking
+	tst.w	C_OFF(a2)		; time trial: car 1 is the ghost, the others are away
+	beq.s	.on
+	cmp.w	#1,d7
+	bne.s	.away
+	bsr	ghost_draw
+	bra	.nc
+.away	add.w	d3,d3
+	bsr	hide_sprite
+	addq.w	#1,d3
+	bsr	hide_sprite
+	bra	.nc
+.on	tst.w	C_SHLD(a2)		; the shield: blinking
 	beq.s	.vis
 	move.l	race_step,d0
 	btst	#1,d0
@@ -2460,6 +2514,98 @@ bobs_draw:
 	movem.l	(sp)+,d0-d7/a0-a4
 	rts
 
+
+;------------------------------------------------------------------------------
+; the time trial ghost: your best lap, as a pale car (sprites of car 1)
+;------------------------------------------------------------------------------
+GH_MAX		equ	1500			; steps (a minute)
+
+ghost_record:				; your car this step -> ghost_cur
+	movem.l	d0/a0-a1,-(sp)
+	lea	cars,a1
+	move.w	C_LAPT(a1),d0
+	cmp.w	#GH_MAX,d0
+	bhs.s	.x
+	mulu	#6,d0
+	lea	ghost_cur,a0
+	add.l	d0,a0
+	move.l	C_X(a1),d0
+	asr.l	#8,d0
+	move.w	d0,(a0)+
+	move.l	C_Y(a1),d0
+	asr.l	#8,d0
+	move.w	d0,(a0)+
+	move.w	C_ANG(a1),(a0)
+.x	movem.l	(sp)+,d0/a0-a1
+	rts
+
+; ghost_lap: d0 = the lap you just did (steps): the best one becomes the ghost
+ghost_lap:
+	movem.l	d0-d1/a0-a1,-(sp)
+	cmp.w	#GH_MAX,d0
+	bhs.s	.x
+	tst.w	gh_best_t
+	beq.s	.new
+	cmp.w	gh_best_t,d0
+	bhs.s	.x
+.new	move.w	d0,gh_best_t
+	st	gh_new
+	mulu	#6,d0
+	lsr.w	#1,d0
+	subq.w	#1,d0
+	lea	ghost_cur,a0
+	lea	ghost_best,a1
+.c	move.w	(a0)+,(a1)+
+	dbf	d0,.c
+.x	movem.l	(sp)+,d0-d1/a0-a1
+	rts
+
+; ghost_draw: on the screen at your lap time (or hidden)
+ghost_draw:
+	movem.l	d0-d4/a0,-(sp)
+	move.w	cars+C_LAPT,d0
+	tst.w	gh_best_t
+	beq.s	.hide
+	cmp.w	#1,race_phase
+	bne.s	.hide
+	cmp.w	gh_best_t,d0
+	bhs.s	.hide
+	mulu	#6,d0
+	lea	ghost_best,a0
+	add.l	d0,a0
+	move.w	(a0)+,d0		; world x, y -> the track picture
+	move.w	(a0)+,d1
+	move.w	(a0),d2
+	move.w	d0,d3
+	sub.w	d1,d3
+	add.w	#320,d3			; sx
+	add.w	d0,d1
+	asr.w	#1,d1			; sy
+	addq.w	#8,d2			; the picture for the heading
+	lsr.w	#4,d2
+	and.w	#15,d2
+	moveq	#0,d0
+	move.b	r_class,d0
+	lsl.w	#5,d0
+	add.w	d2,d0
+	mulu	#CARSPR,d0
+	lea	cars_gfx,a0
+	add.l	d0,a0
+	move.w	d3,d0
+	sub.w	cam_x,d0
+	sub.w	#CAR_AX,d0
+	sub.w	cam_y,d1
+	sub.w	#CAR_AY,d1
+	moveq	#1,d3
+	moveq	#1,d4
+	bsr	put_car
+	bra.s	.x
+.hide	moveq	#2,d3
+	bsr	hide_sprite
+	moveq	#3,d3
+	bsr	hide_sprite
+.x	movem.l	(sp)+,d0-d4/a0
+	rts
 
 ;------------------------------------------------------------------------------
 ; overlays: the start lights and the big texts, a blitter bob over the track
@@ -3007,7 +3153,9 @@ minimap_dots:
 	move.w	TE_MMY(a0),d4		; y offset
 	lea	cars+CARSZ*3,a2
 	moveq	#3,d7			; you last (on top)
-.car	move.w	C_SX(a2),d0
+.car	tst.w	C_OFF(a2)
+	bne	.skip
+	move.w	C_SX(a2),d0
 	mulu	d5,d0
 	lsr.l	#8,d0
 	add.w	d6,d0
@@ -3059,7 +3207,7 @@ minimap_dots:
 	blo.s	.dp
 	lea	HUD_RB(a1),a1
 	dbf	d1,.dr
-	lea	-CARSZ(a2),a2
+.skip	lea	-CARSZ(a2),a2
 	dbf	d7,.car
 	movem.l	(sp)+,d0-d7/a0-a3
 	rts

@@ -88,6 +88,14 @@ ovl_dst		ds.l	1
 lap_last	ds.w	1
 tcars		ds.w	4*3	; the title cars: x, speed, design
 wob_amp		ds.w	1
+prac_mode	ds.w	1	; practice: 0 race, 1 backwards, 2 time trial
+ttrial		ds.b	1
+gh_new		ds.b	1
+gh_file		ds.l	1	; the ghost file: 'RCG1', time, track, the lap
+gh_best_t	ds.w	1
+gh_track	ds.w	1
+ghost_best	ds.b	GH_MAX*6
+ghost_cur	ds.b	GH_MAX*6
 wob_phase	ds.w	1
 ovl_buf		ds.b	OVL_RAW
 	even	; just unlocked (bits as r_unlock)

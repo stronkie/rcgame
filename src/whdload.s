@@ -355,7 +355,7 @@ os_waitblit
 	rts
 
 ; dos: reading any file of the game (the career, the tracks) straight from
-; WHDLoad, writing only the career file.  Handles: 1 = reading, 2 = writing
+; WHDLoad, writing any file with one Write (the career, the ghosts).  Handles: 1 = reading, 2 = writing
 os_open
 	movem.l	d1-d3/a0-a2,-(sp)
 	cmp.l	#1006,d2
@@ -373,7 +373,9 @@ os_open
 	clr.l	(a0)
 	moveq	#1,d0
 	bra.s	.x
-.wr	lea	_frw(pc),a0
+.wr	lea	_fname(pc),a0		; writing: any file, saved on Close
+	move.l	d1,(a0)
+	lea	_flen(pc),a0
 	clr.l	(a0)
 	moveq	#2,d0
 .x	movem.l	(sp)+,d1-d3/a0-a2
@@ -398,34 +400,23 @@ os_read					; d2 = buffer, d3 = length
 .x	move.l	(sp)+,d0
 	movem.l	(sp)+,d1-d3/a0-a2
 	rts
-os_write				; d2 = data, d3 = length
-	movem.l	d1-d3/a0-a2,-(sp)
-	move.l	_frw(pc),d0
-	add.l	d3,d0
-	cmp.l	#128,d0
-	bhi.s	.no
-	lea	FILEBUF,a1
-	add.l	_frw(pc),a1
-	lea	_frw(pc),a2
-	move.l	d0,(a2)
-	move.l	d2,a0
+os_write				; d2 = data, d3 = length (one Write a file)
+	movem.l	a0,-(sp)
+	lea	_wptr(pc),a0
+	move.l	d2,(a0)
+	lea	_flen(pc),a0
+	move.l	d3,(a0)
 	move.l	d3,d0
-	beq.s	.x
-	subq.l	#1,d3
-.c	move.b	(a0)+,(a1)+
-	dbf	d3,.c
-	bra.s	.x
-.no	moveq	#-1,d0
-.x	movem.l	(sp)+,d1-d3/a0-a2
+	movem.l	(sp)+,a0
 	rts
 os_close				; writing: save it through WHDLoad
 	movem.l	d0-d1/a0-a2,-(sp)
 	cmp.l	#2,d1
 	bne.s	.x
-	move.l	_frw(pc),d0
+	move.l	_flen(pc),d0
 	beq.s	.x
-	lea	s_rec(pc),a0
-	lea	FILEBUF,a1
+	move.l	_fname(pc),a0
+	move.l	_wptr(pc),a1
 	move.l	_resload(pc),a2
 	jsr	resload_SaveFile(a2)
 .x	movem.l	(sp)+,d0-d1/a0-a2
@@ -444,5 +435,6 @@ _fsize		dc.l	0
 _fname		dc.l	0
 _frw		dc.l	0
 _flen		dc.l	0
+_wptr		dc.l	0
 _hunks		ds.l	16
 _buf		ds.b	1024
