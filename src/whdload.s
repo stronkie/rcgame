@@ -68,7 +68,7 @@ exec_table	dc.w	-30,os_super-_base,-120,os_nop-_base,-126,os_nop-_base,-132,os_n
 gfx_table	dc.w	-222,os_nop-_base,-270,os_waittof-_base,-456,os_nop-_base,-462,os_nop-_base
 		dc.w	-228,os_waitblit-_base,0
 dos_table	dc.w	-30,os_open-_base,-36,os_close-_base,-42,os_read-_base,-48,os_write-_base
-		dc.w	-198,os_nop-_base,-132,os_zero-_base,0
+		dc.w	-198,os_nop-_base,-132,os_zero-_base,-72,os_nop-_base,0
 
 ;------------------------------------------------------------------ start
 ; a0 = resload

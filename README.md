@@ -1,6 +1,6 @@
 # RC Turbo Cup
 
-![Title](screenshots/v02_01_title.png)
+![Title](screenshots/v04_01_title.png)
 
 **Isometric toy car racing for the Amiga 500.** Race a radio controlled toy car through oversized rooms against Speedy Sam, Careful Carla, Mad Max and Engineer Erik. Collect upgrades and weapons on the track, spend your prize money in the shop and win three cups.
 
@@ -8,14 +8,20 @@ Created By Mark Stronks, Stronkie Soft © 2026
 
 Written in 68000 assembly for a stock Amiga 500 with Kickstart / Workbench 1.3 and a 512K trapdoor expansion (1 MB). Runs from a bootable disk (or a Gotek), from hard drive / CF card and with WHDLoad. Play it with a **joystick** in port 2 (or the keyboard).
 
-**Latest version: V0.3 - TEST VERSION.** On itch.io: https://stronkie.itch.io/rc-turbo-cup
+**Latest version: V0.4 - TEST VERSION.** On itch.io: https://stronkie.itch.io/rc-turbo-cup
 
 ## Features
 
 - **Scrolling isometric tracks** with walls, kerbs and giant props, in 32 colours with hardware scrolling, and a HUD with a minimap, speed, lap, place, weapon, cash and your STRONKIE letters
-- **8 tracks** in 8 toy worlds: Garage Grand Prix, Living Room Rally, Garden Sprint (with a grass shortcut), Toy Store Dash, Playground Pursuit, Science Lab Circuit, Construction Crash and the Championship Arena
+- **10 tracks** in 10 toy worlds: Garage Grand Prix, Living Room Rally, Garden Sprint (with a grass shortcut), Toy Store Dash, Playground Pursuit, Science Lab Circuit, Construction Crash, the Championship Arena, the Kitchen Table Trophy and a secret track to unlock
+- **Backwards races**: the National Cup races every track the other way round, the World Championship every second race
 - **4 cars, 4 laps**: finish in the top 3 to go on, 4th place costs a spare car and a retry
-- **Career**: Amateur Cup, National Cup and World Championship, 8 races each, with prize money, points and gold / silver / bronze trophies
+- **Career**: Amateur Cup, National Cup and World Championship, 9 races each, with prize money, points and gold / silver / bronze trophies
+- **Unlockables**: gold in a cup opens the secret track, gold in all three cups gives you THE GOLDEN CAR
+- **Time trial** against the ghost of your best lap, saved on the disk
+- **STRONKIE POCKET**: play the race on a little handheld with a 4 shade green LCD (dual playfield)
+- **Start lights gantry and big texts** (LAP 2, FINAL LAP!, FINISH!, NEW RECORD!), flashing zippers, flags and electric plates
+- **Title intro**: toy cars race across the title, the logo wobbles on the beat
 - **4 rivals with their own personality**: Speedy Sam (fast, crashes), Careful Carla (steady), Mad Max (fires at you and rams you) and Engineer Erik (goes for every power-up)
 - **Pickups on the track**: motor, tires and battery (permanent upgrades), missiles, bombs, homing missiles, cash, roll cage, turbo, shield and repair; the computer cars use the weapons and power-ups too, but the upgrades, the cash and the letters are only for you
 - **15 colour cars**: attached sprite pairs with outlines, glass, tyres, head and tail lights, in 5 designs and 16 directions
@@ -25,11 +31,17 @@ Written in 68000 assembly for a stock Amiga 500 with Kickstart / Workbench 1.3 a
 - **Weather** in the later cups: rain (slippery) and wind
 - **The shop**: motor, tires, battery, armor, weapon rack, missiles, bombs, spare cars and paint
 - **Practice** on any track, best laps saved
-- Music for the title, four race themes, the shop, winning and losing; motor sound; voices ("three, two, one, go!", "finish!")
+- Music with drums: 4 channels on the title and in the shop, lead, bass and drums in the races (with your motor on the 4th); the motor sings higher with every motor upgrade; voices ("three, two, one, go!", "finish!") and a crowd at the finish
 - Your career is saved on the disk (or the hard drive / WHDLoad)
 
 ## Screenshots
 
+![Start lights (V0.4)](screenshots/v04_03_start_lights.png)
+![Kitchen table (V0.4)](screenshots/v04_04_kitchen_table.png)
+![Final lap (V0.4)](screenshots/v04_05_final_lap.png)
+![Bathroom and the ghost (V0.4)](screenshots/v04_07_bathroom_ghost.png)
+![STRONKIE POCKET (V0.4)](screenshots/v04_10_pocket_race.png)
+![Practice modes (V0.4)](screenshots/v04_06_practice_modes.png)
 ![Garage (V0.2)](screenshots/v02_04_garage.png)
 ![Living room (V0.2)](screenshots/v02_07_living_room.png)
 ![Garden (V0.2)](screenshots/v02_10_garden.png)
@@ -45,12 +57,12 @@ Written in 68000 assembly for a stock Amiga 500 with Kickstart / Workbench 1.3 a
 
 | File | What it is |
 |---|---|
-| `RCTurboCup_V0.3.adf` | Bootable disk. Boot it, or put it on a Gotek, and the game starts by itself. To put the game on your hard drive: boot Workbench from the hard drive, insert this disk and double click **Install** |
-| `whdload/RCTurboCup_V0.3_WHDLoad.lha` | **WHDLoad version** (also as `.zip`): unpack on your hard drive and double click `RCTurboCup`. Own slave (`src/whdload.s`), no Kickstart image needed, F10 quits |
-| `RCTurboCup_V0.3_harddrive.zip` | Drawer `RCTurboCup` with the game, the tracks, its icon and the ReadMe: copy it and double click `RCTurbo` |
+| `RCTurboCup_V0.4.adf` | Bootable disk. Boot it, or put it on a Gotek, and the game starts by itself. To put the game on your hard drive: boot Workbench from the hard drive, insert this disk and double click **Install** |
+| `whdload/RCTurboCup_V0.4_WHDLoad.lha` | **WHDLoad version** (also as `.zip`): unpack on your hard drive and double click `RCTurboCup`. Own slave (`src/whdload.s`), no Kickstart image needed, F10 quits |
+| `RCTurboCup_V0.4_harddrive.zip` | Drawer `RCTurboCup` with the game, the tracks, its icon and the ReadMe: copy it and double click `RCTurbo` |
 | `demo/` | The **free demo** (made from V0.2): the first 2 races of the Amateur Cup and practice on those 2 tracks (ADF and WHDLoad), nothing is saved |
 | `print/` | The **print kit**: an 8 page manual (A5), a box to print and fold with the system requirements (A3, and an A4 mini) and disk labels (A4) as PDF |
-| `previous_versions/` | Older versions (V0.1, V0.2) |
+| `previous_versions/` | Older versions (V0.1, V0.2, V0.3) |
 
 **Requirements:** Amiga 500 (or any Amiga with a 68000) with Kickstart 1.3 and 1 MB: 512K chip + 512K trapdoor. Joystick in port 2.
 
@@ -68,12 +80,12 @@ Written in 68000 assembly for a stock Amiga 500 with Kickstart / Workbench 1.3 a
 ## Building
 
 ```
-sh tools/build.sh          # VER=0.1 by default
+VER=0.4 sh tools/build.sh
 ```
 
 Needs python3 with Pillow and numpy. Everything else is in `tools/`:
 
-- `tracks.py` - the 8 tracks: layouts, the isometric pictures (ground, road, kerbs, walls, props, hazards), the surface maps and the racing lines
+- `tracks.py` - the 10 tracks: layouts, the isometric pictures (ground, road, kerbs, walls, props, hazards), the surface maps and the racing lines
 - `sprites.py` - the cars (5 designs x 16 directions, with and without roll cage), missiles, bombs and explosions
 - `make_gfx.py` - the track files, pickups, HUD, title and menu screens, sounds, voices and music
 - `lz.py` - the packer (the game unpacks with `unlz`)
@@ -84,9 +96,23 @@ Needs python3 with Pillow and numpy. Everything else is in `tools/`:
 - `make_print.py` - the print kit: manual, box and disk labels
 - `emu68k.py`, `harness.py`, `autopilot.py`, `test_whdload.py`, `test_install.py`, `shots_v01.py` - a small A500 test bench (with scrolling and copper splits): whole races with a joystick autopilot, WHDLoad and the installer
 
-Source: `src/main.s` (the full game) and `src/demo.s` (the demo) include `src/rc.s` (start-up, display, scrolling, sprites, unpacking, text, input, sound), `src/race.s` (cars, physics, computer drivers, weapons, pickups, laps, HUD, camera), `src/menus.s` (title, career, shop, results, practice, track loading, saving), `src/loader.s` (the loader with the loading picture), `src/install.s` (the hard disk installer) and `src/whdload.s` (the WHDLoad slave).
+Source: `src/main.s` (the full game) and `src/demo.s` (the demo) include `src/rc.s` (start-up, display, scrolling, sprites, unpacking, text, input, sound), `src/race.s` (cars, physics, computer drivers, weapons, pickups, laps, HUD, camera), `src/menus.s` (title, career, shop, results, practice, time trial, track loading, saving), `src/retro.s` (the STRONKIE POCKET), `src/loader.s` (the loader with the loading picture), `src/install.s` (the hard disk installer) and `src/whdload.s` (the WHDLoad slave).
 
 ## Version history
+
+### V0.4 - TEST VERSION - 21 November 2026
+- Two new tracks: the Kitchen Table Trophy (in the cups) and the Bathroom Blitz (secret)
+- The cups have 9 races now; the National Cup races every track backwards, the World Championship every second race
+- Unlockables: a gold trophy opens the secret track in practice, gold in all three cups gives you THE GOLDEN CAR (a paint in the shop, a little faster)
+- Time trial (in practice): race alone against the ghost of your best lap; the ghost is saved on the disk
+- Practice modes: race, race backwards, time trial
+- STRONKIE POCKET: switch SCREEN on the title and play the race on a little handheld with a 4 shade green LCD
+- A start lights gantry over the grid and big texts: LAP 2, LAP 3, FINAL LAP!, FINISH!, NEW RECORD!
+- Animated track details: flashing zipper arrows, waving flags, crackling electric plates, camera flashes in the crowd
+- Title intro: toy cars race across the title and the logo wobbles on the beat
+- Music with drums (kick, snare, hi-hat) and arpeggios: 4 channels on the title and in the shop; the race tunes get drums too
+- A crowd cheers when you finish; the motor sings higher with every motor upgrade
+- The WHDLoad version saves the career and the ghosts
 
 ### V0.3 - TEST VERSION - 20 November 2026
 - Much easier to get loose from the walls: the car keeps at least half its steering even when it stands still, is pushed a little back towards the track after a wall hit, and turns towards the track by itself when it is slow against a wall

@@ -154,8 +154,7 @@ retro_lut:
 .t	move.w	(a0)+,d0
 	bsr	.lum
 	sub.w	d4,d0
-	lsl.w	#2,d0
-	ext.l	d0
+	mulu	#5,d0			; (a little lighter: easier to see)
 	divu	d5,d0
 	moveq	#3,d1
 	sub.w	d0,d1
@@ -163,21 +162,13 @@ retro_lut:
 	moveq	#0,d1
 .t1	move.b	d1,(a1)+
 	dbf	d3,.t
-	lea	race_shared,a0		; 16-31: by the plain brightness
+	lea	.spr(pc),a0		; 16-31: light cars with dark outlines
 	moveq	#15,d3
-.s	move.w	(a0)+,d0
-	bsr	.lum
-	lsl.w	#2,d0
-	ext.l	d0
-	divu	#106,d0
-	moveq	#3,d1
-	sub.w	d0,d1
-	bpl.s	.s1
-	moveq	#0,d1
-.s1	move.b	d1,(a1)+
+.s	move.b	(a0)+,(a1)+
 	dbf	d3,.s
 	movem.l	(sp)+,d0-d5/a0-a1
 	rts
+.spr	dc.b	3,3,1,0,0,2,1,0,1,1,1,0,0,2,1,0
 .lum	move.w	d0,d1			; d0 = $rgb -> 2r + 4g + b (0..105)
 	lsr.w	#8,d1
 	and.w	#15,d1

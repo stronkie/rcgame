@@ -220,8 +220,10 @@ def build_manual(path):
     # 6 career and shop
     page_frame(c, W, H, 6, 'THE CAREER AND THE SHOP')
     flow(c, [P('Three cups', sub),
-             P('The <b>Amateur Cup</b>, the <b>National Cup</b> and the <b>World Championship</b>, each with 8 races on the 8 '
-               'tracks. Every race is 4 laps against three of the four rivals (a different one sits out each race).'),
+             P('The <b>Amateur Cup</b>, the <b>National Cup</b> and the <b>World Championship</b>, each with 9 races. '
+               'Every race is 4 laps against three of the four rivals. The National Cup races every track <b>backwards</b>, '
+               'the World Championship every second race. A <b>gold</b> trophy opens the secret track, gold in all three '
+               'cups gives you <b>THE GOLDEN CAR</b>.'),
              P('Finish in the <b>top 3</b> to go on to the next race. A <b>4th place</b> costs one of your spare cars and you '
                'race again. No spare cars left: game over. In the later cups it can rain (slippery!) or blow (the wind '
                'pushes your car).'),
@@ -246,20 +248,23 @@ def build_manual(path):
               ('5 PLAYGROUND PURSUIT', 'The school playground: sand pits, a ramp and tight hairpins.'),
               ('6 SCIENCE LAB CIRCUIT', 'Chemical spills and electric plates that spin you round.'),
               ('7 CONSTRUCTION CRASH', 'Sand, gravel, bricks, pipes and two big jumps.'),
-              ('8 CHAMPIONSHIP ARENA', 'The longest track, with grandstands, oil and everything else.')]
+              ('8 CHAMPIONSHIP ARENA', 'The longest track, with grandstands, oil and everything else.'),
+              ('9 KITCHEN TABLE TROPHY', 'A bread crust wall on the table cloth, past plates, cups and a cereal box.'),
+              ('? SECRET TRACK', 'Win a gold trophy to find out where it is...')]
     pics = {6: 'v02_03_start', 0: 'v02_04_garage', 1: 'v02_07_living_room', 2: 'v02_10_garden', 3: 'v02_11_toy_store', 4: 'v02_12_playground',
-            5: 'v02_13_science_lab', 7: 'v02_15_arena'}
+            5: 'v02_13_science_lab', 7: 'v02_15_arena', 8: 'v04_04_kitchen_table'}
     cw = (W - 24 * mm - 6 * mm) / 2
     for i, (n, t) in enumerate(tracks):
-        x = 12 * mm + (i % 2) * (cw + 6 * mm); y = H - 22 * mm - (i // 2) * 44 * mm
+        x = 12 * mm + (i % 2) * (cw + 6 * mm); y = H - 20 * mm - (i // 2) * 36 * mm
         p = pics.get(i)
         if p and os.path.exists(shot(p)):
             im = Image.open(shot(p)).crop((0, 0, 640, 420))
-            img(c, im, x, y - 28 * mm, w=cw, h=28 * mm)
+            img(c, im, x, y - 22 * mm, w=cw, h=22 * mm)
         else:
-            c.setFillColor(NAVYL); c.rect(x, y - 28 * mm, cw, 28 * mm, stroke=0, fill=1)
-        flow(c, [P('<b>%s</b>' % n, ParagraphStyle('tn', parent=body, fontSize=8.4, leading=10, textColor=RED)),
-                 P(t, ParagraphStyle('tt', parent=body, fontSize=8, leading=9.6))], x, y - 42 * mm, cw, 13 * mm)
+            c.setFillColor(NAVYL); c.rect(x, y - 22 * mm, cw, 22 * mm, stroke=0, fill=1)
+            c.setFillColor(YELLOW); c.setFont('SansB', 20); c.drawCentredString(x + cw / 2, y - 14 * mm, '?')
+        flow(c, [P('<b>%s</b>' % n, ParagraphStyle('tn', parent=body, fontSize=7.6, leading=9, textColor=RED)),
+                 P(t, ParagraphStyle('tt', parent=body, fontSize=7.2, leading=8.4))], x, y - 34 * mm, cw, 11.5 * mm)
     c.showPage()
     # 8 back
     c.setFillColor(NAVY); c.rect(0, 0, W, H, stroke=0, fill=1)
@@ -271,7 +276,8 @@ def build_manual(path):
              P('- Missiles fly straight: line up behind the car in front first.', st),
              P('- Save a roll cage or a shield for the last lap.', st),
              P('- Spend money on the motor and the tires first, a spare car when you are low.', st),
-             P('- Practice mode keeps your best laps: try to beat them.', st),
+             P('- Practice keeps your best laps. In the <b>time trial</b> you race the ghost of your best lap.', st),
+             P('- SCREEN on the title: play on the <b>STRONKIE POCKET</b>, a little handheld with a 4 shade green screen.', st),
              P('Credits', sh),
              P('Game, code, graphics, music and sound: Created By Mark Stronks, Stronkie Soft.', st),
              P('Written in 68000 assembly for the Amiga 500. Thanks to everybody who tests the game - tell me what you '

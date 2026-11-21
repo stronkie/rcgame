@@ -1,4 +1,4 @@
-RC TURBO CUP  V0.3 - TEST VERSION
+RC TURBO CUP  V0.4 - TEST VERSION
 Created By Mark Stronks, Stronkie Soft (c) 2026
 
 Isometric toy car racing for the Amiga 500.
@@ -12,13 +12,30 @@ START
 THE GAME
   Race your radio controlled toy car through oversized rooms: a
   garage workbench, the living room, the garden path, a toy store,
-  the school playground, a science lab, a building site and the
-  championship arena. 4 cars, 4 laps. Finish in the top 3 to go on;
-  4th place costs you a spare car and you race again.
+  the school playground, a science lab, a building site, the
+  championship arena and the kitchen table. 4 cars, 4 laps. Finish
+  in the top 3 to go on; 4th place costs you a spare car and you
+  race again.
 
   Career: the Amateur Cup, the National Cup and the World
-  Championship, 8 races each. Win prize money and points, spend
-  the money in the shop between the races.
+  Championship, 9 races each. In the National Cup every track is
+  raced BACKWARDS, in the World Championship every second race.
+  Win prize money and points, spend the money in the shop.
+
+  Win a GOLD trophy in a cup: the secret track opens up in
+  practice. Gold in all three cups: THE GOLDEN CAR (a paint in the
+  shop, and a little faster).
+
+PRACTICE
+  Any track, three modes (joystick up/down):
+  RACE, RACE BACKWARDS, and TIME TRIAL: alone on the track against
+  the ghost of your best lap. The ghost is saved on the disk
+  (RCGhost0..9) and waits for you next time.
+
+STRONKIE POCKET
+  SCREEN on the title: COLOUR or STRONKIE POCKET. In the pocket
+  the race is played on a little handheld with a 4 shade green
+  LCD screen, just like back in the day.
 
 CONTROLS (joystick in port 2)
   LEFT / RIGHT     steer

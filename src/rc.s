@@ -64,6 +64,7 @@ _LVOClose	equ	-36
 _LVORead	equ	-42
 _LVOWrite	equ	-48
 _LVODelay	equ	-198
+_LVODeleteFile	equ	-72
 
 	section	code,code
 

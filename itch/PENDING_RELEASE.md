@@ -13,7 +13,21 @@ Keep the demo as it is.
 itch edit page: https://itch.io/game/edit/5410595 (public page https://stronkie.itch.io/rc-turbo-cup)
 
 ## Versions waiting to be published
-(none yet)
+
+### V0.4 TEST VERSION - 21 November 2026 (built, on GitHub, in Downloads and Dropbox)
+- Two new tracks: the Kitchen Table Trophy (in the cups) and the Bathroom Blitz (secret)
+- The cups have 9 races now; the National Cup races every track backwards, the World Championship every second race
+- Unlockables: a gold trophy opens the secret track in practice, gold in all three cups gives THE GOLDEN CAR
+- Time trial (in practice) against the ghost of your best lap, saved on the disk
+- Practice modes: race, race backwards, time trial
+- STRONKIE POCKET: the race on a little handheld with a 4 shade green LCD (SCREEN on the title)
+- Start lights gantry and big texts: LAP 2, LAP 3, FINAL LAP!, FINISH!, NEW RECORD!
+- Flashing zipper arrows, waving flags, crackling electric plates, camera flashes
+- Title intro: toy cars racing across, the logo wobbles on the beat
+- Music with drums and arpeggios (4 channels on the title and in the shop), a crowd at the finish, the motor sings higher with every upgrade
+- WHDLoad saves the career and the ghosts
+- Files: RCTurboCup_V0.4.adf, RCTurboCup_V0.4_harddrive.zip, whdload/RCTurboCup_V0.4_WHDLoad.lha/.zip; screenshots v04_*
+- The demo stays as it is (V0.2)
 
 ## Released on itch
 

@@ -103,7 +103,7 @@ def main():
     b = g.A('cars'); g.am.ww(b + 16, 3); g.am.ww(b + 20, 1)
     autopilot.drive(g, 1500)
     check('race finished', g.wait('st_results', 900)); g.run(10); g.shot('03_results')
-    check('career saved through WHDLoad', g.saves and g.saves[-1] == 128 and open(os.path.join(data, 'RCTurbo.dat'), 'rb').read()[:4] == b'RCT1')
+    check('career saved through WHDLoad', g.saves and g.saves[-1] == 128 and open(os.path.join(data, 'RCTurbo.dat'), 'rb').read()[:4] == b'RCT2')
     g.fire(); g.wait('st_shop', 600); g.run(10)
     g.key(0x45, 30); g.wait('st_title', 600); g.run(10)
     g.am.tap(0x59)

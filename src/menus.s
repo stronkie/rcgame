@@ -1539,6 +1539,7 @@ wrap_track:
 ;------------------------------------------------------------------------------
 st_practice_in:
 	st	practice
+	clr.b	race_reverse		; (the mode line says it)
 	move.w	cur_track,d0
 	bsr	wrap_track
 	move.w	d0,cur_track
@@ -1670,10 +1671,17 @@ ghost_load:
 	move.l	#gh_file,d2
 	move.l	#8+GH_MAX*6,d3
 	jsr	_LVORead(a6)
+	move.l	d0,d5
 	move.l	d4,d1
 	jsr	_LVOClose(a6)
-	cmp.l	#'RCG1',gh_file		; is it a good one, for this track?
+	cmp.l	#'RCG1',gh_file		; is it a good one, for this track, all of it?
 	bne.s	.bad
+	moveq	#0,d0
+	move.w	gh_best_t,d0
+	mulu	#6,d0
+	addq.l	#8,d0
+	cmp.l	d0,d5
+	blt.s	.bad
 	move.w	gh_track,d0
 	cmp.w	cur_track,d0
 	bne.s	.bad
@@ -1708,9 +1716,16 @@ ghost_save:
 	move.w	gh_best_t,d3
 	mulu	#6,d3
 	addq.l	#8,d3
+	move.l	d3,d5
 	jsr	_LVOWrite(a6)
+	move.l	d0,d6
 	move.l	d4,d1
 	jsr	_LVOClose(a6)
+	cmp.l	d5,d6			; the disk was full: no half ghost
+	beq.s	.ok
+	move.l	#ghost_name,d1
+	jsr	_LVODeleteFile(a6)
+.ok
 	tst.b	whd_mode
 	bne.s	.x
 	moveq	#25,d1			; let the disk finish
